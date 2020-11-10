@@ -19,14 +19,15 @@ jobs:
           ruby-version: '2.7'
       - name: Install the dependencies
         run: |
-          gem install bundler
           bundle install --jobs 4 --retry 3
       - name: Run the scripts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ github.actor }}
         run: |
           ruby ./download_pdfs.rb
           ruby ./generate_atom.rb
+          rm -rf ${GITHUB_USER} *.rb .gitignore LICENSE README.md
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:

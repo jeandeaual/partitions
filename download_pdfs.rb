@@ -7,7 +7,7 @@ require 'open-uri'
 require 'octokit'
 
 ACCESS_TOKEN = ENV['GITHUB_TOKEN']
-GITHUB_USER = 'jeandeaual'
+GITHUB_USER = ENV.fetch('GITHUB_USER')
 REPO_PREFIX = 'lilypond-'
 EXCLUDE = ['lilypond-template', 'lilypond-jekyll-template'].freeze
 FOLDERS = ['a4', 'letter'].freeze

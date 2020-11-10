@@ -12,7 +12,7 @@ REPO_PREFIX = 'lilypond-'
 EXCLUDE = ['lilypond-template', 'lilypond-jekyll-template'].freeze
 FOLDERS = ['a4', 'letter'].freeze
 BRANCH = 'gh-pages'
-REPOSITORY_LIST_FILE = 'repositories.markdown'
+REPOSITORY_LIST_FILE = File.join('_includes', 'repositories.markdown')
 
 # Generates a SHA1 digest, in the same way as `git hash-object`.
 #
@@ -57,6 +57,7 @@ client = if ACCESS_TOKEN.nil? || ACCESS_TOKEN.empty?
 client.auto_paginate = true
 
 # Empty the repository list
+FileUtils.mkdir_p(File.dirname(REPOSITORY_LIST_FILE)) unless File.directory?(File.dirname(REPOSITORY_LIST_FILE))
 File.write(REPOSITORY_LIST_FILE, '')
 
 client.repositories(GITHUB_USER).select do |repo|

@@ -7,7 +7,7 @@ require 'nokogiri'
 require 'rss'
 require 'securerandom'
 
-GITHUB_USER = 'jeandeaual'
+GITHUB_USER = ENV.fetch('GITHUB_USER')
 FOLDERS = ['a4', 'letter'].freeze
 BRANCH = 'gh-pages'
 BASE_URL = '/partitions'

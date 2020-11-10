@@ -20,14 +20,19 @@ jobs:
       - name: Install the dependencies
         run: |
           bundle install --jobs 4 --retry 3
-      - name: Run the scripts
+      - name: Download the PDFs
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
           GITHUB_USER: ${{ github.actor }}
-        run: |
-          ruby ./download_pdfs.rb
-          ruby ./generate_atom.rb
-          rm -rf ${GITHUB_USER} *.rb .gitignore LICENSE README.md
+        run: ruby ./download_pdfs.rb
+      - name: Generate the OPDS feeds
+        env:
+          GITHUB_USER: ${{ github.actor }}
+        run: ruby ./generate_opds.rb
+      - name: Clean the output
+        env:
+          GITHUB_USER: ${{ github.actor }}
+        run: rm -rf ${GITHUB_USER} *.rb Gemfile* .gitignore LICENSE README.md
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:

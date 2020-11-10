@@ -19,7 +19,7 @@ jobs:
           ruby-version: '2.7'
       - name: Install the dependencies
         run: |
-          bundle install --jobs 4 --retry 3
+          bundle install --jobs 4 --retry 3 --without development
       - name: Download the PDFs
         env:
           GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
       - name: Clean the output
         env:
           GITHUB_USER: ${{ github.actor }}
-        run: rm -rf ${GITHUB_USER} *.rb Gemfile* .gitignore LICENSE README.md
+        run: rm -rfv ${GITHUB_USER} *.rb Gemfile* .gitignore LICENSE README.md
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:

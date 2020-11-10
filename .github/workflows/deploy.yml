@@ -1,4 +1,4 @@
-name: deploy
+name: Deploy
 on:
   push:
     branches:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-        ruby-version: '2.7'
+          ruby-version: '2.7'
       - name: Install the dependencies
         run: |
           gem install bundler
@@ -28,7 +28,7 @@ jobs:
           ruby ./download_pdfs.rb
           ruby ./generate_atom.rb
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@3.6.1
+        uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages

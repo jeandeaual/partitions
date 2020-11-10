@@ -28,7 +28,7 @@ jobs:
           ruby ./download_pdfs.rb
           ruby ./generate_atom.rb
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@3.6.1
+        uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages

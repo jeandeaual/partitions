@@ -1,0 +1,12 @@
+title: LilyPond Partitions
+description: >-
+  Partitions built using LilyPond.
+baseurl: "/partitions"
+url: https://jeandeaual.github.io
+repository: jeandeaual/partitions
+lang: en-US
+show_downloads: false
+
+# Build settings
+theme: jekyll-theme-minimal
+plugins: []

@@ -11,7 +11,7 @@ GITHUB_USER = ENV.fetch('GITHUB_USER')
 FOLDERS = ['a4', 'letter'].freeze
 BRANCH = 'gh-pages'
 BASE_URL = '/partitions'
-BASE_DIR = 'opds'
+BASE_DIR = File.join('site', 'opds')
 
 module PDF
   KEYWORD_SEPARATORS = [';', ',', ' '].freeze
@@ -122,7 +122,9 @@ end
 # Create the OPDS directory
 FileUtils.mkdir_p(BASE_DIR) unless File.directory?(BASE_DIR)
 
-File.write(File.join(BASE_DIR, 'root.xml'), root.to_xml)
+root_filepath = File.join(BASE_DIR, "root.xml")
+puts "Writing #{root_filepath}..."
+File.write(root_filepath, root.to_xml)
 
 FOLDERS.each do |folder|
   format_root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
@@ -184,5 +186,7 @@ FOLDERS.each do |folder|
     end
   end
 
-  File.write(File.join(BASE_DIR, "#{folder}.xml"), format_root.to_xml)
+  filepath = File.join(BASE_DIR, "#{folder}.xml")
+  puts "Writing #{filepath}..."
+  File.write(filepath, format_root.to_xml)
 end

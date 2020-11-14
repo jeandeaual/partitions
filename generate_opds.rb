@@ -162,8 +162,13 @@ FOLDERS.each do |folder|
           xml.id [repository, folder, basename].join('/')
           xml[RSS::DC_PREFIX].issued now
           xml.updated now
-          xml.author do
-            xml.name reader.info[:Composer].gsub(' ', ' ')
+          [:Composer, :Author].each do |key|
+            if reader.info[key]
+              xml.author do
+                xml.name reader.info[key].gsub(' ', ' ')
+              end
+              break
+            end
           end
           xml[RSS::DC_PREFIX].language 'en'
           if keywords.include?('piano')

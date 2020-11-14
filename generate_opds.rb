@@ -8,7 +8,7 @@ require 'rss'
 require 'securerandom'
 
 GITHUB_USER = ENV.fetch('GITHUB_USER')
-FOLDERS = ['a4', 'letter'].freeze
+FOLDERS = %w[a4 letter].freeze
 BRANCH = 'gh-pages'
 BASE_URL = '/partitions'
 BASE_DIR = 'opds'
@@ -42,10 +42,6 @@ module OPDS
   PREFIX = 'opds'
   URI = "#{BASE_URI}/2010/catalog"
 
-  def self.generate_uuid
-    "urn:uuid:#{SecureRandom.uuid}"
-  end
-
   module Rel
     SELF = 'self'
     START = 'start'
@@ -54,6 +50,8 @@ module OPDS
     CRAWLABLE = "#{BASE_URI}/crawlable"
     ACQUISITION = "#{BASE_URI}/acquisition"
     OPEN_ACCESS = "#{ACQUISITION}/open-access"
+    IMAGE = "#{BASE_URI}/image"
+    THUMBNAIL = "#{IMAGE}/thumbnail"
   end
 
   module Link
@@ -87,14 +85,14 @@ end
 
 now = Time.now.iso8601
 
+feed_path = 'root.xml'
 root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
-    href = File.join(BASE_URL, BASE_DIR, 'root.xml')
-    xml.id OPDS.generate_uuid
+    href = [BASE_URL, BASE_DIR, feed_path].join('/')
+    xml.id feed_path
     xml.updated now
-    xml[RSS::DC_PREFIX].date now
     xml.link(rel: OPDS::Rel::SELF,
              href: href,
              type: OPDS::Link::ACQUISITION)
@@ -108,10 +106,11 @@ root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
     end
     FOLDERS.each do |folder|
       xml.entry do
-        xml.id OPDS.generate_uuid
+        href = [BASE_URL, BASE_DIR, "#{folder}.xml"].join('/')
+        xml.id href
         xml.title folder.capitalize
         xml.link(rel: OPDS::Rel::SUBSECTION,
-                 href: File.join(BASE_URL, BASE_DIR, "#{folder}.xml"),
+                 href: href,
                  type: OPDS::Link::NAVIGATION)
         xml.updated now
         xml.content("Partitions in #{folder.capitalize} format", type: 'text')
@@ -124,17 +123,18 @@ end
 opds_folder = File.join('site', BASE_DIR)
 FileUtils.mkdir_p(opds_folder) unless File.directory?(opds_folder)
 
-root_filepath = File.join(opds_folder, "root.xml")
+root_filepath = File.join(opds_folder, feed_path)
 puts "Writing #{root_filepath}..."
 File.write(root_filepath, root.to_xml)
 
 FOLDERS.each do |folder|
+  feed_path = "#{folder}.xml"
   format_root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
     xml.feed('xmlns' => RSS::Atom::URI,
              "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
              "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
-      href = File.join(BASE_URL, BASE_DIR, "#{folder}.xml")
-      xml.id OPDS.generate_uuid
+      href = [BASE_URL, BASE_DIR, feed_path].join('/')
+      xml.id href
       xml.link(rel: OPDS::Rel::SELF,
                href: href,
                type: OPDS::Link::ACQUISITION)
@@ -142,7 +142,7 @@ FOLDERS.each do |folder|
                href: href,
                type: OPDS::Link::ACQUISITION)
       xml.link(rel: OPDS::Rel::UP,
-               href: File.join(BASE_URL, BASE_DIR, 'root.xml'),
+               href: [BASE_URL, BASE_DIR, 'root.xml'].join('/'),
                type: OPDS::Link::ACQUISITION)
       xml.title "#{folder.capitalize} Partitions"
       xml.author do
@@ -150,7 +150,6 @@ FOLDERS.each do |folder|
         xml.uri 'https://jeandeaual.github.io/partitions'
       end
       xml.updated now
-      xml[RSS::DC_PREFIX].date now
 
       Dir["#{GITHUB_USER}/#{folder}/**/*.pdf"].each do |file|
         reader = PDF::Reader.new(file)
@@ -160,13 +159,26 @@ FOLDERS.each do |folder|
 
         xml.entry do
           xml.title reader.info[:Title]
-          xml.id OPDS.generate_uuid
-          xml.updated now
+          xml.id [repository, folder, basename].join('/')
           xml[RSS::DC_PREFIX].issued now
+          xml.updated now
           xml.author do
             xml.name reader.info[:Composer].gsub(' ', ' ')
           end
           xml[RSS::DC_PREFIX].language 'en'
+          if keywords.include?('piano')
+            xml.category(scheme: BISAC::URI,
+                         term: BISAC::Term::PRINTED_MUSIC_PIANO,
+                         label: BISAC::Label::PRINTED_MUSIC_PIANO)
+          elsif keywords.include?('guitar') || keywords.include?('bass')
+            xml.category(scheme: BISAC::URI,
+                         term: BISAC::Term::PRINTED_MUSIC_FRETTED,
+                         label: BISAC::Label::PRINTED_MUSIC_FRETTED)
+          else
+            xml.category(scheme: BISAC::URI,
+                         term: BISAC::Term::PRINTED_MUSIC_GENERAL,
+                         label: BISAC::Label::PRINTED_MUSIC_GENERAL)
+          end
           xml.content(reader.info[:Subject], type: 'text')
           xml.link(rel: OPDS::Rel::OPEN_ACCESS,
                    href: "https://raw.githubusercontent.com/jeandeaual/#{repository}/#{BRANCH}/#{folder}/#{basename}",

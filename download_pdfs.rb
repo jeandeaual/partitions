@@ -9,8 +9,8 @@ require 'octokit'
 ACCESS_TOKEN = ENV['GITHUB_TOKEN']
 GITHUB_USER = ENV.fetch('GITHUB_USER')
 REPO_PREFIX = 'lilypond-'
-EXCLUDE = ['lilypond-template', 'lilypond-jekyll-template'].freeze
-FOLDERS = ['a4', 'letter'].freeze
+EXCLUDE = %w[lilypond-template lilypond-jekyll-template].freeze
+FOLDERS = %w[a4 letter].freeze
 BRANCH = 'gh-pages'
 REPOSITORY_LIST_FILE = File.join('site', '_includes', 'repositories.markdown')
 
@@ -60,11 +60,13 @@ client.auto_paginate = true
 FileUtils.mkdir_p(File.dirname(REPOSITORY_LIST_FILE)) unless File.directory?(File.dirname(REPOSITORY_LIST_FILE))
 File.write(REPOSITORY_LIST_FILE, '')
 
-client.repositories(GITHUB_USER).select do |repo|
+def partition_repo?(repo)
   repo.name.start_with?(REPO_PREFIX) &&
     repo.language == 'LilyPond' &&
     !EXCLUDE.include?(repo.name)
-end.each do |repo|
+end
+
+client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo|
   File.write(REPOSITORY_LIST_FILE,
              "* [#{repo.description}](#{repo.homepage})\n",
              mode: 'a')

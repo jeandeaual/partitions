@@ -24,6 +24,8 @@ jobs:
           ruby-version: '2.7'
       - name: Install the dependencies
         run: |
+          # Required by pdftoimage
+          sudo apt-get update && sudo apt-get -y install imagemagick poppler-utils
           bundle install --jobs 4 --retry 3 --without development
       - name: Download the PDFs
         env:
@@ -41,3 +43,4 @@ jobs:
           BRANCH: gh-pages
           FOLDER: site
           CLEAN: true
+          SINGLE_COMMIT: true

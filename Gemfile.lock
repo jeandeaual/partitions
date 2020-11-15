@@ -96,6 +96,7 @@ GEM
     http_parser.rb (0.6.0)
     i18n (0.9.5)
       concurrent-ruby (~> 1.0)
+    iconv (1.0.8)
     jaro_winkler (1.5.4)
     jekyll (3.9.0)
       addressable (~> 2.4)
@@ -208,7 +209,7 @@ GEM
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
     liquid (4.0.3)
-    listen (3.3.0)
+    listen (3.3.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
     maruku (0.7.3)
@@ -236,6 +237,8 @@ GEM
       hashery (~> 2.0)
       ruby-rc4
       ttfunk
+    pdftoimage (0.1.7)
+      iconv (~> 1.0)
     public_suffix (3.1.1)
     rainbow (3.0.0)
     rb-fsevent (0.10.4)
@@ -326,6 +329,7 @@ DEPENDENCIES
   nokogiri (~> 1.10)
   octokit (~> 4.0)
   pdf-reader (~> 2.4)
+  pdftoimage (~> 0.1.7)
   rspec
   solargraph
 

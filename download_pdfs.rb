@@ -68,7 +68,7 @@ end
 
 client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo|
   File.write(REPOSITORY_LIST_FILE,
-             "* [#{repo.description}](#{repo.homepage})\n",
+             "* [#{repo.description.delete_suffix('.')}](#{repo.homepage})\n",
              mode: 'a')
 
   FOLDERS.each do |folder|

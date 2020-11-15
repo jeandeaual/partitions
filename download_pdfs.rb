@@ -3,7 +3,7 @@
 
 require 'digest/sha1'
 require 'fileutils'
-require 'open-uri'
+require 'net/http'
 require 'octokit'
 
 ACCESS_TOKEN = ENV['GITHUB_TOKEN']
@@ -24,7 +24,7 @@ def github_sha1_hash_file(file_path)
   # See https://chris.frederick.io/2013/05/27/calculating-git-sha-1-hashes-in-ruby.html
   hash.update("blob #{File.size(file_path)}\0")
 
-  URI.open(file_path, 'r') do |io|
+  File.open(file_path, 'r') do |io|
     until io.eof?
       buffer = io.read(1024)
       hash.update(buffer)
@@ -42,9 +42,9 @@ end
 def download_file(url, file_path)
   puts "Downloading #{url} to #{file_path}..."
 
-  URI.open(url) do |remote_file|
+  Net::HTTP.get_response(URI(url)) do |remote_file|
     File.open(file_path, 'wb') do |file|
-      file.write(remote_file.read)
+      file.write(remote_file.body)
     end
   end
 end

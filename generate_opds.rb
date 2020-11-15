@@ -85,6 +85,10 @@ module BISAC
   end
 end
 
+# Write the author to an OPDS feed.
+#
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
 def write_author(xml)
   xml.name 'Alexis Jeandeau'
   xml.uri 'https://jeandeaual.github.io/partitions'
@@ -92,6 +96,12 @@ end
 
 now = Time.now.iso8601
 
+# Write the root OPDS feed.
+#
+# @param feed_path [String] the last part of the OPDS feed URI
+# @param now [Time] the current time
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
 def write_root(feed_path, now, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
@@ -135,6 +145,25 @@ root_filepath = File.join(opds_folder, feed_path)
 puts "Writing #{root_filepath}..."
 File.write(root_filepath, root.to_xml)
 
+Document = Struct.new(
+  :id,
+  :title,
+  :author,
+  :subject,
+  :basename,
+  :repository,
+  :cover_href,
+  :cover_path,
+  :thumbnail_href,
+  :thumbnail_path,
+  :keywords
+)
+
+# Write the categories in an OPDS feed.
+#
+# @param keywords [Array<String>] the PDF keywords
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
 def write_categories(keywords, xml)
   if keywords.include?('piano')
     xml.category(scheme: BISAC::URI,
@@ -151,71 +180,148 @@ def write_categories(keywords, xml)
   end
 end
 
-def write_entry(folder, pdf_file, now, xml)
-  reader = PDF::Reader.new(pdf_file)
-  basename = File.basename(pdf_file)
-  repository = File.dirname(pdf_file).delete_prefix(File.join(GITHUB_USER, folder, ''))
-  keywords = reader.keywords
+# Generate a cover file.
+#
+# @param image [PDFToImage::Image] the path of the PDF file to parse
+# @param basename [String] the basename of the PDF file, with no extension
+# @param repository [String] the name of the GitHub repository the file belongs to
+# @param cover_folder [String] the path of the folder containing the cover files
+# @return [Array<(String, String)>] the href and path of the generated file
+def generate_cover(image, basename, repository, cover_folder)
+  cover_name = "#{basename}.jpg"
+  cover_href = [BASE_URL, 'covers', repository, cover_name].join('/')
+  cover_path = File.join(cover_folder, cover_name)
 
+  unless File.file?(cover_path)
+    puts "Writing #{cover_path}..."
+    image.resize('50%').save(cover_path)
+  end
+
+  [cover_href, cover_path]
+end
+
+# Generate a thumbnail.
+#
+# @param image [PDFToImage::Image] the path of the PDF file to parse
+# @param basename [String] the basename of the PDF file, with no extension
+# @param repository [String] the name of the GitHub repository the file belongs to
+# @param cover_folder [String] the path of the folder containing the cover files
+# @return [Array<(String, String)>] the href and path of the generated file
+def generate_thumbnail(image, basename, repository, cover_folder)
+  thumbnail_name = "#{basename}_thumbnail.jpg"
+  thumbnail_href = [BASE_URL, 'covers', repository, thumbnail_name].join('/')
+  thumbnail_path = File.join(cover_folder, thumbnail_name)
+
+  unless File.file?(thumbnail_path)
+    puts "Writing #{thumbnail_path}..."
+    image.resize('150').quality('80%').save(thumbnail_path)
+  end
+
+  [thumbnail_href, thumbnail_path]
+end
+
+# Parse the author of a PDF document.
+#
+# @param reader [PDF::Reader] the PDF file reader
+# @param doc [Document] the document
+# @return [void]
+def parse_author(reader, doc)
+  %i[Composer Author].each do |key|
+    next unless reader.info[key]
+
+    doc.author = reader.info[key].tr(' ', ' ')
+    break
+  end
+end
+
+# Parse a PDF document.
+#
+# @param folder [String] either `a4` or `letter`
+# @param pdf_file [String] the path of the PDF file to parse
+# @return [Document] the parsed document
+def parse_entry(folder, pdf_file)
+  doc = Document.new
+  reader = PDF::Reader.new(pdf_file)
+
+  doc.basename = File.basename(pdf_file, '.pdf')
+  doc.repository = File.dirname(pdf_file).delete_prefix(File.join(GITHUB_USER, folder, ''))
+
+  # Generate the cover and thumbnail
   images = PDFToImage.open(pdf_file)
   cover = images[0]
   thumbnail = cover.clone
 
-  filename = File.basename(pdf_file, File.extname(pdf_file))
-  cover_folder = File.join('site', 'covers', repository)
+  cover_folder = File.join('site', 'covers', doc.repository)
   FileUtils.mkdir_p(cover_folder) unless File.directory?(cover_folder)
 
-  cover_name = "#{filename}.jpg"
-  cover_href = [BASE_URL, 'covers', repository, cover_name].join('/')
-  cover_path = File.join(cover_folder, cover_name)
-  unless File.file?(cover_path)
-    puts "Writing #{cover_path}..."
-    cover.resize('50%').save(cover_path)
-  end
+  doc.cover_href, doc.cover_path = generate_cover(cover, doc.basename, doc.repository, cover_folder)
+  doc.thumbnail_href, doc.thumbnail_path = generate_thumbnail(thumbnail, doc.basename, doc.repository, cover_folder)
 
-  thumbnail_name = "#{filename}_thumbnail.jpg"
-  thumbnail_href = [BASE_URL, 'covers', repository, thumbnail_name].join('/')
-  thumbnail_path = File.join(cover_folder, thumbnail_name)
-  unless File.file?(thumbnail_path)
-    puts "Writing #{thumbnail_path}..."
-    thumbnail.resize('150').quality('80%').save(thumbnail_path)
-  end
+  doc.title = reader.info[:Title]
+  doc.id = [doc.repository, folder, doc.basename].join('/')
 
+  doc.subject = reader.info[:Subject]
+
+  parse_author(reader, doc)
+
+  doc.keywords = reader.keywords
+
+  doc
+end
+
+# Parse a PDF document.
+#
+# @param folder [String] either `a4` or `letter`
+# @param doc [Document] the PDF document
+# @param now [Time] the current time
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
+def write_entry(folder, doc, now, xml)
   xml.entry do
-    xml.title reader.info[:Title]
-    xml.id [repository, folder, basename].join('/')
+    xml.title doc.title
+    xml.id doc.id
     xml[RSS::DC_PREFIX].issued now
     xml.updated now
 
-    %i[Composer Author].each do |key|
-      next unless reader.info[key]
+    write_categories(doc.keywords, xml)
 
-      xml.author do
-        xml.name reader.info[key].gsub(' ', ' ')
-      end
-      break
+    xml.author do
+      xml.name doc.author
     end
 
-    write_categories(keywords, xml)
+    xml.content(doc.subject, type: 'text')
 
-    xml.content(reader.info[:Subject], type: 'text')
     xml.link(rel: OPDS::Rel::IMAGE,
-             href: cover_href,
+             href: doc.cover_href,
              type: 'image/jpeg')
     xml.link(rel: OPDS::Rel::THUMBNAIL,
-             href: thumbnail_href,
+             href: doc.thumbnail_href,
              type: 'image/jpeg')
     xml.link(rel: OPDS::Rel::RELATED,
-             href: "https://#{GITHUB_USER}.github.io/#{repository}",
+             href: "https://#{GITHUB_USER}.github.io/#{doc.repository}",
              type: 'text/html',
              title: 'Website')
     xml.link(rel: OPDS::Rel::OPEN_ACCESS,
-             href: "https://raw.githubusercontent.com/jeandeaual/#{repository}/#{BRANCH}/#{folder}/#{basename}",
+             href: [
+               'https://raw.githubusercontent.com',
+               GITHUB_USER,
+               doc.repository,
+               BRANCH,
+               folder,
+               "#{doc.basename}.pdf"
+             ].join('/'),
              type: 'application/pdf',
              title: "#{folder.capitalize} PDF")
   end
 end
 
+# Write the format OPDS feeds.
+#
+# @param folder [String] either `a4` or `letter`
+# @param feed_path [String] the last part of the OPDS feed URI
+# @param now [Time] the current time
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
 def write_format(folder, feed_path, now, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
@@ -237,8 +343,14 @@ def write_format(folder, feed_path, now, xml)
     end
     xml.updated now
 
+    docs = []
+
     Dir["#{GITHUB_USER}/#{folder}/**/*.pdf"].each do |pdf_file|
-      write_entry(folder, pdf_file, now, xml)
+      docs.push(parse_entry(folder, pdf_file))
+    end
+
+    docs.each do |doc|
+      write_entry(folder, doc, now, xml)
     end
   end
 end

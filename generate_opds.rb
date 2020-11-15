@@ -7,12 +7,20 @@ require 'nokogiri'
 require 'pdftoimage'
 require 'rss'
 require 'securerandom'
+require 'set'
 
 GITHUB_USER = ENV.fetch('GITHUB_USER')
 FOLDERS = %w[a4 letter].freeze
 BRANCH = 'gh-pages'
 BASE_URL = '/partitions'
 BASE_DIR = 'opds'
+INSTRUMENTS = %w[
+  piano
+  harpsichord
+  bass
+  guitar
+  ukulele
+].freeze
 
 module PDF
   KEYWORD_SEPARATORS = [';', ',', ' '].freeze
@@ -123,10 +131,10 @@ def write_root(feed_path, now, xml)
     xml.updated now
     xml.link(rel: OPDS::Rel::SELF,
              href: href,
-             type: OPDS::Link::ACQUISITION)
+             type: OPDS::Link::NAVIGATION)
     xml.link(rel: OPDS::Rel::START,
              href: href,
-             type: OPDS::Link::ACQUISITION)
+             type: OPDS::Link::NAVIGATION)
     xml.title 'Partitions'
     xml.author do
       write_author xml
@@ -157,6 +165,28 @@ root_filepath = File.join(opds_folder, feed_path)
 puts "Writing #{root_filepath}..."
 File.write(root_filepath, root.to_xml)
 
+# @!attribute id
+#   @return [String] the unique ID of the OPDS entry
+# @!attribute title
+#   @return [String] document title (PDF Title metadata)
+# @!attribute author
+#   @return [String] document author (PDF Composer or Author metadata)
+# @!attribute subject
+#   @return [String] document subject (PDF Subject metadata)
+# @!attribute basename
+#   @return [String] base name of the PDF file (with no extension)
+# @!attribute repository
+#   @return [String] GitHub repository the PDF file belongs to
+# @!attribute cover_href
+#   @return [String] local hyperlink of the cover image
+# @!attribute cover_path
+#   @return [String] local file path of the cover image
+# @!attribute thumbnail_href
+#   @return [String] local hyperlink of the thumbnail
+# @!attribute thumbnail_path
+#   @return [String] local file path of the thumbnail
+# @!attribute keywords
+#   @return [Array<String>] list of keywords (PDF Keywords metadata, split)
 Document = Struct.new(
   :id,
   :title,
@@ -287,12 +317,12 @@ end
 
 # Parse a PDF document.
 #
-# @param folder [String] either `a4` or `letter`
+# @param format [String] either `a4` or `letter`
 # @param doc [Document] the PDF document
 # @param now [Time] the current time
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_entry(folder, doc, now, xml)
+def write_entry(format, doc, now, xml)
   xml.entry do
     xml.title doc.title
     xml.id doc.id
@@ -323,22 +353,80 @@ def write_entry(folder, doc, now, xml)
                GITHUB_USER,
                doc.repository,
                BRANCH,
-               folder,
+               format,
                "#{doc.basename}.pdf"
              ].join('/'),
              type: 'application/pdf',
-             title: "#{folder.capitalize} PDF")
+             title: "#{format.capitalize} PDF")
   end
 end
 
-# Write the format OPDS feeds.
+# Write the OPDS feeds containing all entries for a specific page format.
 #
-# @param folder [String] either `a4` or `letter`
+# @param format [String] either `a4` or `letter`
 # @param feed_path [String] the last part of the OPDS feed URI
 # @param now [Time] the current time
+# @param docs [Array<Document>] the PDF documents
+# @param instruments [Set<String>] the instruments
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_format(folder, feed_path, now, xml)
+def write_format_subsections(format, feed_path, now, instruments, xml)
+  xml.feed('xmlns' => RSS::Atom::URI,
+           "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
+           "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
+    href = [BASE_URL, BASE_DIR, feed_path].join('/')
+    start = [BASE_URL, BASE_DIR, 'root.xml'].join('/')
+    xml.id href
+    xml.link(rel: OPDS::Rel::SELF,
+             href: href,
+             type: OPDS::Link::NAVIGATION)
+    xml.link(rel: OPDS::Rel::START,
+             href: start,
+             type: OPDS::Link::NAVIGATION)
+    xml.link(rel: OPDS::Rel::UP,
+             href: start,
+             type: OPDS::Link::NAVIGATION)
+    xml.title "#{format.capitalize} Partitions"
+    xml.author do
+      write_author xml
+    end
+
+    # All
+    xml.entry do
+      href = [BASE_URL, BASE_DIR, format, 'all.xml'].join('/')
+      xml.id href
+      xml.title 'All'
+      xml.link(rel: OPDS::Rel::CRAWLABLE,
+               href: href,
+               type: OPDS::Link::ACQUISITION)
+      xml.updated now
+      xml.content('All', type: 'text')
+    end
+
+    instruments.each do |instrument|
+      xml.entry do
+        href = [BASE_URL, BASE_DIR, format, "#{instrument}.xml"].join('/')
+        xml.id href
+        xml.title instrument.capitalize
+        xml.link(rel: OPDS::Rel::SUBSECTION,
+                 href: href,
+                 type: OPDS::Link::ACQUISITION)
+        xml.updated now
+        xml.content(instrument.capitalize, type: 'text')
+      end
+    end
+  end
+end
+
+# Write the OPDS feeds containing all entries for a specific page format.
+#
+# @param format [String] either `a4` or `letter`
+# @param feed_path [String] the last part of the OPDS feed URI
+# @param now [Time] the current time
+# @param docs [Array<Document>] the PDF documents
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
+def write_all_entries(format, feed_path, now, docs, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
@@ -348,25 +436,54 @@ def write_format(folder, feed_path, now, xml)
              href: href,
              type: OPDS::Link::ACQUISITION)
     xml.link(rel: OPDS::Rel::START,
-             href: href,
-             type: OPDS::Link::ACQUISITION)
-    xml.link(rel: OPDS::Rel::UP,
              href: [BASE_URL, BASE_DIR, 'root.xml'].join('/'),
              type: OPDS::Link::ACQUISITION)
-    xml.title "#{folder.capitalize} Partitions"
+    xml.link(rel: OPDS::Rel::UP,
+             href: [BASE_URL, BASE_DIR, "#{format}.xml"].join('/'),
+             type: OPDS::Link::ACQUISITION)
+    xml.title "All #{format.capitalize} Partitions"
     xml.author do
       write_author xml
     end
     xml.updated now
 
-    docs = []
-
-    Dir["#{GITHUB_USER}/#{folder}/**/*.pdf"].each do |pdf_file|
-      docs.push(parse_entry(folder, pdf_file))
+    docs.sort_by { |doc| [doc.author || '', doc.title] }.each do |doc|
+      write_entry(format, doc, now, xml)
     end
+  end
+end
+
+# Write the OPDS feeds containing all entries for a specific instrument.
+#
+# @param format [String] either `a4` or `letter`
+# @param instrument [String] the instrument
+# @param now [Time] the current time
+# @param docs [Array<Document>] the PDF documents
+# @param xml [Nokogiri::XML::Builder] the XML builder
+# @return [void]
+def write_instrument_entries(format, instrument, now, docs, xml)
+  xml.feed('xmlns' => RSS::Atom::URI,
+           "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
+           "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
+    href = [BASE_URL, BASE_DIR, format, "#{instrument}.xml"].join('/')
+    xml.id href
+    xml.link(rel: OPDS::Rel::SELF,
+             href: href,
+             type: OPDS::Link::ACQUISITION)
+    xml.link(rel: OPDS::Rel::START,
+             href: [BASE_URL, BASE_DIR, 'root.xml'].join('/'),
+             type: OPDS::Link::ACQUISITION)
+    xml.link(rel: OPDS::Rel::UP,
+             href: [BASE_URL, BASE_DIR, "#{format}.xml"].join('/'),
+             type: OPDS::Link::ACQUISITION)
+    xml.title "#{instrument.capitalize} Partitions"
+    xml.author do
+      write_author xml
+    end
+    xml.updated now
 
     docs.sort_by { |doc| [doc.author || '', doc.title] }.each do |doc|
-      write_entry(folder, doc, now, xml)
+      write_entry(format, doc, now, xml)
     end
   end
 end
@@ -374,11 +491,50 @@ end
 FOLDERS.each do |folder|
   feed_path = "#{folder}.xml"
 
-  format_root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-    write_format(folder, feed_path, now, xml)
+  docs = []
+
+  # Parse the PDF files
+  Dir["#{GITHUB_USER}/#{folder}/**/*.pdf"].each do |pdf_file|
+    docs.push(parse_entry(folder, pdf_file))
   end
 
-  filepath = File.join(opds_folder, "#{folder}.xml")
+  found_instruments = Set[]
+
+  docs.each do |doc|
+    found_instruments.merge(doc.keywords.intersection(INSTRUMENTS))
+  end
+
+  # Print the navigation
+  format_categories = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+    write_format_subsections(folder, feed_path, now, found_instruments, xml)
+  end
+
+  filepath = File.join(opds_folder, feed_path)
   puts "Writing #{filepath}..."
-  File.write(filepath, format_root.to_xml)
+  File.write(filepath, format_categories.to_xml)
+
+  folder_path = File.join(opds_folder, folder)
+  FileUtils.mkdir_p(folder_path) unless File.directory?(folder_path)
+
+  # Print the feeds with all entries
+  feed_path = [folder, 'all.xml'].join('/')
+
+  format_all = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+    write_all_entries(folder, feed_path, now, docs, xml)
+  end
+
+  filepath = File.join(folder_path, 'all.xml')
+  puts "Writing #{filepath}..."
+  File.write(filepath, format_all.to_xml)
+
+  # Print the feeds per instruments
+  found_instruments.each do |instrument|
+    format_instrument = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+      write_instrument_entries(folder, instrument, now, docs.select { |doc| doc.keywords.include?(instrument) }, xml)
+    end
+
+    filepath = File.join(folder_path, "#{instrument}.xml")
+    puts "Writing #{filepath}..."
+    File.write(filepath, format_instrument.to_xml)
+  end
 end

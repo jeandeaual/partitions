@@ -349,7 +349,7 @@ def write_format(folder, feed_path, now, xml)
       docs.push(parse_entry(folder, pdf_file))
     end
 
-    docs.each do |doc|
+    docs.sort_by { |doc| [doc.author || '', doc.title] }.each do |doc|
       write_entry(folder, doc, now, xml)
     end
   end

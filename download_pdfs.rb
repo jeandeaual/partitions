@@ -13,6 +13,7 @@ EXCLUDE = %w[lilypond-template lilypond-jekyll-template].freeze
 FOLDERS = %w[a4 letter].freeze
 BRANCH = 'gh-pages'
 REPOSITORY_LIST_FILE = File.join('site', '_includes', 'repositories.markdown')
+DEFAULT_TOPICS = %w[lilypond sheet-music].freeze
 
 # Generates a SHA1 digest, in the same way as `git hash-object`.
 #
@@ -49,10 +50,13 @@ def download_file(url, file_path)
   end
 end
 
+# To prevent a warning when calling the Topics API
+GITHUB_MEDIA_TYPE = 'application/vnd.github.mercy-preview+json'
+
 client = if ACCESS_TOKEN.nil? || ACCESS_TOKEN.empty?
-           Octokit::Client.new
+           Octokit::Client.new(accept: GITHUB_MEDIA_TYPE)
          else
-           Octokit::Client.new(access_token: ACCESS_TOKEN)
+           Octokit::Client.new(access_token: ACCESS_TOKEN, accept: GITHUB_MEDIA_TYPE)
          end
 client.auto_paginate = true
 
@@ -67,8 +71,19 @@ def partition_repo?(repo)
 end
 
 client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo|
+  topics = client.topics(repo.full_name)
+
+  topic_list = if topics.key?(:names)
+                 (topics[:names].reject { DEFAULT_TOPICS.include?(_1) }.map { "&#35;#{_1}" }.join(', '))
+                   .prepend('*')
+                   .concat("*\n\n")
+               else
+                 ''
+               end
+
+  # Update site/_includes/repositories.markdown
   File.write(REPOSITORY_LIST_FILE,
-             "* [#{repo.description.delete_suffix('.')}](#{repo.homepage})\n",
+             "## [#{repo.name.delete_prefix(REPO_PREFIX)}](#{repo.homepage})\n\n#{repo.description}\n\n#{topic_list}",
              mode: 'a')
 
   FOLDERS.each do |folder|

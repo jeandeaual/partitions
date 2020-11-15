@@ -16,7 +16,6 @@ BASE_URL = '/partitions'
 BASE_DIR = 'opds'
 INSTRUMENTS = %w[
   piano
-  harpsichord
   bass
   guitar
   ukulele

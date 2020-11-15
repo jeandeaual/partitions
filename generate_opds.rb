@@ -396,7 +396,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
       href = [BASE_URL, BASE_DIR, format, 'all.xml'].join('/')
       xml.id href
       xml.title 'All'
-      xml.link(rel: OPDS::Rel::CRAWLABLE,
+      xml.link(rel: OPDS::Rel::SUBSECTION,
                href: href,
                type: OPDS::Link::ACQUISITION)
       xml.updated now

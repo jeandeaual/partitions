@@ -65,6 +65,7 @@ module OPDS
   end
 end
 
+# BISAC (Book Industry Standards and Communications) Headings List
 module BISAC
   URI = 'http://www.bisg.org/standards/bisac_subject/index.html'
 
@@ -82,6 +83,17 @@ module BISAC
     PRINTED_MUSIC_FRETTED = 'MUSIC / Printed Music / Guitar & Fretted Instruments'
     PRINTED_MUSIC_PERCUSSION = 'MUSIC / Printed Music / Percussion'
     PRINTED_MUSIC_PIANO = 'MUSIC / Printed Music / Piano & Keyboard Repertoire'
+  end
+end
+
+# LCSH (Library of Congress Subject Headings)
+# https://www.dublincore.org/specifications/dublin-core/dcmi-terms/#http://purl.org/dc/terms/LCSH
+module LCSH
+  URI = 'http://purl.org/dc/terms/LCSH'
+
+  module Term
+    # https://id.loc.gov/authorities/subjects/sh2004002338.html
+    SHEET_MUSIC = 'Sheet music'
   end
 end
 
@@ -165,6 +177,7 @@ Document = Struct.new(
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
 def write_categories(keywords, xml)
+  # BISAC
   if keywords.include?('piano')
     xml.category(scheme: BISAC::URI,
                  term: BISAC::Term::PRINTED_MUSIC_PIANO,
@@ -178,6 +191,9 @@ def write_categories(keywords, xml)
                  term: BISAC::Term::PRINTED_MUSIC_GENERAL,
                  label: BISAC::Label::PRINTED_MUSIC_GENERAL)
   end
+
+  # LCSH
+  xml.category(scheme: LCSH::URI, term: LCSH::Term::SHEET_MUSIC)
 end
 
 # Generate a cover file.

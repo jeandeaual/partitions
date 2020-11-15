@@ -17,7 +17,7 @@ BASE_DIR = 'opds'
 module PDF
   KEYWORD_SEPARATORS = [';', ',', ' '].freeze
 
-  class Reader
+  class Reader # rubocop:disable Style/Documentation
     # Converts the document's keyword string into an array.
     # Tries, in turn, `;`, `,` and ` ` as separators.
     #
@@ -186,15 +186,18 @@ def write_entry(folder, pdf_file, now, xml)
     xml.id [repository, folder, basename].join('/')
     xml[RSS::DC_PREFIX].issued now
     xml.updated now
+
     %i[Composer Author].each do |key|
-      if reader.info[key]
-        xml.author do
-          xml.name reader.info[key].gsub(' ', ' ')
-        end
-        break
+      next unless reader.info[key]
+
+      xml.author do
+        xml.name reader.info[key].gsub(' ', ' ')
       end
+      break
     end
+
     write_categories(keywords, xml)
+
     xml.content(reader.info[:Subject], type: 'text')
     xml.link(rel: OPDS::Rel::IMAGE,
              href: cover_href,

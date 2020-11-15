@@ -1,0 +1,9 @@
+require:
+  - rubocop-performance
+
+AllCops:
+  NewCops: enable
+Metrics/AbcSize:
+  Max: 30
+Metrics/MethodLength:
+  Max: 30

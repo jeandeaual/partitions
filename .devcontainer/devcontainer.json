@@ -16,6 +16,7 @@
         "rebornix.Ruby",
         "wingrunr21.vscode-ruby",
         "castwide.solargraph",
+        "misogi.ruby-rubocop",
         "sissel.shopify-liquid"
     ],
     // Use 'forwardPorts' to make a list of ports inside the container available locally.

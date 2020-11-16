@@ -341,18 +341,16 @@ def write_entry(format, doc, now, xml)
     xml[RSS::DC_PREFIX].issued now
     xml.updated now
 
-    write_categories(doc.keywords, xml)
-
-    doc.author.each do |title, authors|
-      authors.each do |author|
-        xml.author do
-          # Put the type of author in a comment ("Composer", "Arranger" or "Author")
-          xml.comment " #{title} "
-          # Replace spaces with non-breaking spaces (otherwise Moon+ Reader doesn't display them)
-          xml.name author.tr(' ', ' ')
-        end
+    # KOReader seems to only display the last author tag, so put the composer last
+    doc.author.reverse_each do |title, authors|
+      xml.author do
+        # Put the type of author in a comment ("Composer", "Arranger" or "Author")
+        xml.comment " #{title} "
+        xml.name authors.join(', ')
       end
     end
+
+    write_categories(doc.keywords, xml)
 
     xml.content(doc.subject, type: 'text')
 

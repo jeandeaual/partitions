@@ -108,7 +108,7 @@ end
 #
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_author(xml)
+def write_feed_author(xml)
   xml.name 'Alexis Jeandeau'
   xml.uri 'https://jeandeaual.github.io/partitions'
 end
@@ -136,7 +136,7 @@ def write_root(feed_path, now, xml)
              type: OPDS::Link::NAVIGATION)
     xml.title 'Partitions'
     xml.author do
-      write_author xml
+      write_feed_author xml
     end
     FOLDERS.each do |folder|
       xml.entry do
@@ -169,7 +169,7 @@ File.write(root_filepath, root.to_xml)
 # @!attribute title
 #   @return [String] document title (PDF Title metadata)
 # @!attribute author
-#   @return [String] document author (PDF Composer or Author metadata)
+#   @return [Hash<String, Array<String>>] document author (PDF Composer or Author metadata)
 # @!attribute subject
 #   @return [String] document subject (PDF Subject metadata)
 # @!attribute basename
@@ -265,17 +265,30 @@ def generate_thumbnail(image, basename, repository, cover_folder)
   [thumbnail_href, thumbnail_path]
 end
 
+# Turn a hash of document author(s) into a string
+#
+# @param author [Hash<String, Array<String>>] the author(s)
+# @return [String] the sortable string
+def author_hash_to_s(author)
+  author.map { _2 }.flatten.join(', ') || ''
+end
+
 # Parse the author of a PDF document.
 #
 # @param reader [PDF::Reader] the PDF file reader
 # @param doc [Document] the document
 # @return [void]
 def parse_author(reader, doc)
-  %i[Composer Author].each do |key|
-    next unless reader.info[key]
+  doc.author = {} if doc.author.nil?
 
-    doc.author = reader.info[key].tr(' ', ' ')
-    break
+  %i[Composer Arranger Author].each do |key|
+    author_s = reader.info[key]
+
+    next unless author_s
+
+    # Split authors
+    authors = author_s.split(Regexp.union([', and ', ' and ', ', ', ' & ']))
+    doc.author[key] = authors unless doc.author.value?(authors)
   end
 end
 
@@ -330,8 +343,15 @@ def write_entry(format, doc, now, xml)
 
     write_categories(doc.keywords, xml)
 
-    xml.author do
-      xml.name doc.author
+    doc.author.each do |title, authors|
+      authors.each do |author|
+        xml.author do
+          # Put the type of author in a comment ("Composer", "Arranger" or "Author")
+          xml.comment " #{title} "
+          # Replace spaces with non-breaking spaces (otherwise Moon+ Reader doesn't display them)
+          xml.name author.tr(' ', ' ')
+        end
+      end
     end
 
     xml.content(doc.subject, type: 'text')
@@ -387,7 +407,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
              type: OPDS::Link::NAVIGATION)
     xml.title "#{format.capitalize} Partitions"
     xml.author do
-      write_author xml
+      write_feed_author xml
     end
 
     # All
@@ -442,11 +462,11 @@ def write_all_entries(format, feed_path, now, docs, xml)
              type: OPDS::Link::ACQUISITION)
     xml.title "All #{format.capitalize} Partitions"
     xml.author do
-      write_author xml
+      write_feed_author xml
     end
     xml.updated now
 
-    docs.sort_by { |doc| [doc.author || '', doc.title] }.each do |doc|
+    docs.sort_by { |doc| [author_hash_to_s(doc.author), doc.title] }.each do |doc|
       write_entry(format, doc, now, xml)
     end
   end
@@ -477,11 +497,11 @@ def write_instrument_entries(format, instrument, now, docs, xml)
              type: OPDS::Link::ACQUISITION)
     xml.title "#{instrument.capitalize} Partitions"
     xml.author do
-      write_author xml
+      write_feed_author xml
     end
     xml.updated now
 
-    docs.sort_by { |doc| [doc.author || '', doc.title] }.each do |doc|
+    docs.sort_by { |doc| [author_hash_to_s(doc.author), doc.title] }.each do |doc|
       write_entry(format, doc, now, xml)
     end
   end

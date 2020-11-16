@@ -73,7 +73,7 @@ end
 client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo|
   topics = client.topics(repo.full_name)
 
-  topic_list = if topics.key?(:names)
+  topic_list = if topics.key?(:names) && !topics[:names].empty?
                  (topics[:names].reject { DEFAULT_TOPICS.include?(_1) }.map { "&#35;#{_1}" }.join(', '))
                    .prepend('*')
                    .concat("*\n\n")

@@ -97,12 +97,12 @@ client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo
 
     dl_dir = File.join(GITHUB_USER, folder, repo.name)
 
+    # Create the download directory
+    FileUtils.mkdir_p(dl_dir) unless File.directory?(dl_dir)
+
     # Save the repository's creation date and last push date
     File.write(File.join(dl_dir, 'created_at'), repo.created_at.strftime('%FT%TZ'))
     File.write(File.join(dl_dir, 'pushed_at'), repo.pushed_at.strftime('%FT%TZ'))
-
-    # Create the download directory
-    FileUtils.mkdir_p(dl_dir) unless File.directory?(dl_dir)
 
     files.each do |file|
       file_path = File.join(dl_dir, file.name)

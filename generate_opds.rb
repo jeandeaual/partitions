@@ -186,6 +186,10 @@ File.write(root_filepath, root.to_xml)
 #   @return [String] local file path of the thumbnail
 # @!attribute keywords
 #   @return [Array<String>] list of keywords (PDF Keywords metadata, split)
+# @!attribute created_at
+#   @return [Time, nil] creation date of the repository the document belongs to
+# @!attribute pushed_at
+#   @return [Time, nil] last push date of the repository the document belongs to
 Document = Struct.new(
   :id,
   :title,
@@ -197,7 +201,9 @@ Document = Struct.new(
   :cover_path,
   :thumbnail_href,
   :thumbnail_path,
-  :keywords
+  :keywords,
+  :created_at,
+  :pushed_at
 )
 
 # Write the categories in an OPDS feed.
@@ -324,6 +330,12 @@ def parse_entry(folder, pdf_file)
 
   doc.keywords = reader.keywords
 
+  created_at_file = File.join(File.dirname(pdf_file), 'created_at')
+  doc.created_at = Time.parse(File.read(created_at_file)) if File.file?(created_at_file)
+
+  pushed_at_file = File.join(File.dirname(pdf_file), 'pushed_at')
+  doc.pushed_at = Time.parse(File.read(pushed_at_file)) if File.file?(pushed_at_file)
+
   doc
 end
 
@@ -338,8 +350,8 @@ def write_entry(format, doc, now, xml)
   xml.entry do
     xml.title doc.title
     xml.id doc.id
-    xml[RSS::DC_PREFIX].issued now
-    xml.updated now
+    xml[RSS::DC_PREFIX].issued doc.created_at || now
+    xml.updated doc.pushed_at || now
 
     # KOReader seems to only display the last author tag, so put the composer last
     doc.author.reverse_each do |title, authors|

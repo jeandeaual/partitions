@@ -43,9 +43,14 @@ end
 def download_file(url, file_path)
   puts "Downloading #{url} to #{file_path}..."
 
-  Net::HTTP.get_response(URI(url)) do |remote_file|
-    File.open(file_path, 'wb') do |file|
-      file.write(remote_file.body)
+  Net::HTTP.get_response(URI(url)) do |response|
+    case response
+    when Net::HTTPSuccess
+      File.open(file_path, 'wb') do |file|
+        file.write(response.body)
+      end
+    else
+      raise "Received HTTP #{response.code} (#{response.message}) from #{url}"
     end
   end
 end
@@ -91,6 +96,10 @@ client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo
     next unless files
 
     dl_dir = File.join(GITHUB_USER, folder, repo.name)
+
+    # Save the repository's creation date and last push date
+    File.write(File.join(dl_dir, 'created_at'), repo.created_at.strftime('%FT%TZ'))
+    File.write(File.join(dl_dir, 'pushed_at'), repo.pushed_at.strftime('%FT%TZ'))
 
     # Create the download directory
     FileUtils.mkdir_p(dl_dir) unless File.directory?(dl_dir)

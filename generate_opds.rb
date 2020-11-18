@@ -416,6 +416,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
              href: start,
              type: OPDS::Link::NAVIGATION)
     xml.title "#{format.capitalize} Partitions"
+    xml.updated now
     xml.author do
       write_feed_author xml
     end

@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Serve",
+            "label": "Serve Jekyll",
             "type": "shell",
             "command": "bundle exec jekyll serve --livereload",
             "group": {
@@ -12,7 +12,7 @@
             "isBackground": true,
         },
         {
-            "label": "Build",
+            "label": "Build Jekyll",
             "type": "shell",
             "command": "bundle exec jekyll build",
             "group": {

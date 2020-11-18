@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Download Script",
+            "type": "Ruby",
+            "request": "launch",
+            "program": "${workspaceRoot}/download_pdfs.rb",
+            "env": {
+                "GITHUB_USER": "jeandeaual",
+                "GITHUB_TOKEN": ""
+            }
+        },
+        {
+            "name": "Debug OPDS Generation Script",
+            "type": "Ruby",
+            "request": "launch",
+            "program": "${workspaceRoot}/generate_opds.rb",
+            "env": {
+                "GITHUB_USER": "jeandeaual"
+            }
+        }
+    ]
+}

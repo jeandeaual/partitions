@@ -132,7 +132,7 @@ now = Time.now.iso8601
 # Write the root OPDS feed.
 #
 # @param feed_path [String] the last part of the OPDS feed URI
-# @param now [Time] the current time
+# @param now [String] the current time as an ISO8601 string
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
 def write_root(feed_path, now, xml)
@@ -199,9 +199,9 @@ File.write(root_filepath, root.to_xml)
 # @!attribute keywords
 #   @return [Array<String>] list of keywords (PDF Keywords metadata, split)
 # @!attribute created_at
-#   @return [Time, nil] creation date of the repository the document belongs to
+#   @return [String] creation date of the repository the document belongs to (as an ISO8601 string)
 # @!attribute pushed_at
-#   @return [Time, nil] last push date of the repository the document belongs to
+#   @return [String] last push date of the repository the document belongs to (as an ISO8601 string)
 Document = Struct.new(
   :id,
   :title,
@@ -351,10 +351,10 @@ def parse_entry(folder, pdf_file)
   doc.keywords = reader.keywords
 
   created_at_file = File.join(File.dirname(pdf_file), 'created_at')
-  doc.created_at = Time.parse(File.read(created_at_file)) if File.file?(created_at_file)
+  doc.created_at = Time.parse(File.read(created_at_file)).iso8601 if File.file?(created_at_file)
 
   pushed_at_file = File.join(File.dirname(pdf_file), 'pushed_at')
-  doc.pushed_at = Time.parse(File.read(pushed_at_file)) if File.file?(pushed_at_file)
+  doc.pushed_at = Time.parse(File.read(pushed_at_file)).iso8601 if File.file?(pushed_at_file)
 
   doc
 end
@@ -363,7 +363,7 @@ end
 #
 # @param format [String] either `a4` or `letter`
 # @param doc [Document] the PDF document
-# @param now [Time] the current time
+# @param now [String] the current time as an ISO8601 string
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
 def write_entry(format, doc, now, xml)
@@ -415,7 +415,7 @@ end
 #
 # @param format [String] either `a4` or `letter`
 # @param feed_path [String] the last part of the OPDS feed URI
-# @param now [Time] the current time
+# @param now [String] the current time as an ISO8601 string
 # @param docs [Array<Document>] the PDF documents
 # @param instruments [Set<String>] the instruments
 # @param xml [Nokogiri::XML::Builder] the XML builder
@@ -473,7 +473,7 @@ end
 #
 # @param format [String] either `a4` or `letter`
 # @param feed_path [String] the last part of the OPDS feed URI
-# @param now [Time] the current time
+# @param now [String] the current time as an ISO8601 string
 # @param docs [Array<Document>] the PDF documents
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
@@ -506,7 +506,7 @@ end
 #
 # @param format [String] either `a4` or `letter`
 # @param instrument [String] the instrument
-# @param now [Time] the current time
+# @param now [String] the current time as an ISO8601 string
 # @param docs [Array<Document>] the PDF documents
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]

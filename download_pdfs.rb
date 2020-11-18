@@ -5,6 +5,7 @@ require 'digest/sha1'
 require 'fileutils'
 require 'net/http'
 require 'octokit'
+require 'rss'
 
 # GitHub access token (if nil, access the API anonymously)
 # @return [String, nil]
@@ -117,8 +118,8 @@ client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo
     FileUtils.mkdir_p(dl_dir) unless File.directory?(dl_dir)
 
     # Save the repository's creation date and last push date
-    File.write(File.join(dl_dir, 'created_at'), repo.created_at.strftime('%FT%TZ'))
-    File.write(File.join(dl_dir, 'pushed_at'), repo.pushed_at.strftime('%FT%TZ'))
+    File.write(File.join(dl_dir, 'created_at'), repo.created_at.iso8601)
+    File.write(File.join(dl_dir, 'pushed_at'), repo.pushed_at.iso8601)
 
     files.each do |file|
       file_path = File.join(dl_dir, file.name)

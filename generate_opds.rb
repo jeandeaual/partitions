@@ -9,11 +9,23 @@ require 'rss'
 require 'securerandom'
 require 'set'
 
+# GitHub username
+# @return [String]
 GITHUB_USER = ENV.fetch('GITHUB_USER')
+# File format folders (`a4` and `letter`)
+# @return [Array<String>]
 FOLDERS = %w[a4 letter].freeze
+# Branch on each repository where the built partitions are located
+# @return [String]
 BRANCH = 'gh-pages'
+# Base folder of the Jekyll website
+# @return [String]
 BASE_URL = '/partitions'
-BASE_DIR = 'opds'
+# Folder on the Jekyll site containing the OPDS 1.2 feeds
+# @return [String]
+BASE_OPDS_FOLDER = 'opds'
+# List of instrument categories we want to create
+# @return [Array<String>]
 INSTRUMENTS = %w[
   piano
   bass
@@ -22,6 +34,8 @@ INSTRUMENTS = %w[
 ].freeze
 
 module PDF
+  # Separators between items of the `Keywords` PDF metadata
+  # @return [Array<String>]
   KEYWORD_SEPARATORS = [';', ',', ' '].freeze
 
   class Reader # rubocop:disable Style/Documentation
@@ -125,7 +139,7 @@ def write_root(feed_path, now, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
-    href = [BASE_URL, BASE_DIR, feed_path].join('/')
+    href = [BASE_URL, BASE_OPDS_FOLDER, feed_path].join('/')
     xml.id feed_path
     xml.updated now
     xml.link(rel: OPDS::Rel::SELF,
@@ -135,12 +149,10 @@ def write_root(feed_path, now, xml)
              href: href,
              type: OPDS::Link::NAVIGATION)
     xml.title 'Partitions'
-    xml.author do
-      write_feed_author xml
-    end
+    xml.author { write_feed_author xml }
     FOLDERS.each do |folder|
       xml.entry do
-        href = [BASE_URL, BASE_DIR, "#{folder}.xml"].join('/')
+        href = [BASE_URL, BASE_OPDS_FOLDER, "#{folder}.xml"].join('/')
         xml.id href
         xml.title folder.capitalize
         xml.link(rel: OPDS::Rel::SUBSECTION,
@@ -154,10 +166,10 @@ def write_root(feed_path, now, xml)
 end
 
 feed_path = 'root.xml'
-root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') { |xml| write_root(feed_path, now, xml) }
+root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') { write_root(feed_path, now, _1) }
 
 # Create the OPDS directory
-opds_folder = File.join('site', BASE_DIR)
+opds_folder = File.join('site', BASE_OPDS_FOLDER)
 FileUtils.mkdir_p(opds_folder) unless File.directory?(opds_folder)
 
 root_filepath = File.join(opds_folder, feed_path)
@@ -213,15 +225,23 @@ Document = Struct.new(
 # @return [void]
 def write_categories(keywords, xml)
   # BISAC
-  if keywords.include?('piano')
+  bisac_subcategory_set = false
+
+  if %w[piano harpsichord].any? { keywords.include?(_1) }
     xml.category(scheme: BISAC::URI,
                  term: BISAC::Term::PRINTED_MUSIC_PIANO,
                  label: BISAC::Label::PRINTED_MUSIC_PIANO)
-  elsif keywords.include?('guitar') || keywords.include?('bass')
+    bisac_subcategory_set = true
+  end
+
+  if %w[guitar bass mandolin].any? { keywords.include?(_1) }
     xml.category(scheme: BISAC::URI,
                  term: BISAC::Term::PRINTED_MUSIC_FRETTED,
                  label: BISAC::Label::PRINTED_MUSIC_FRETTED)
-  else
+    bisac_subcategory_set = true
+  end
+
+  unless bisac_subcategory_set
     xml.category(scheme: BISAC::URI,
                  term: BISAC::Term::PRINTED_MUSIC_GENERAL,
                  label: BISAC::Label::PRINTED_MUSIC_GENERAL)
@@ -350,8 +370,6 @@ def write_entry(format, doc, now, xml)
   xml.entry do
     xml.title doc.title
     xml.id doc.id
-    xml[RSS::DC_PREFIX].issued doc.created_at || now
-    xml.updated doc.pushed_at || now
 
     # KOReader seems to only display the last author tag, so put the composer last
     doc.author.reverse_each do |title, authors|
@@ -362,9 +380,12 @@ def write_entry(format, doc, now, xml)
       end
     end
 
+    xml[RSS::DC_PREFIX].issued doc.created_at || now
+    xml.updated doc.pushed_at || now
+
     write_categories(doc.keywords, xml)
 
-    xml.content(doc.subject, type: 'text')
+    xml.summary(doc.subject, type: 'text')
 
     xml.link(rel: OPDS::Rel::IMAGE,
              href: doc.cover_href,
@@ -403,8 +424,8 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
-    href = [BASE_URL, BASE_DIR, feed_path].join('/')
-    start = [BASE_URL, BASE_DIR, 'root.xml'].join('/')
+    href = [BASE_URL, BASE_OPDS_FOLDER, feed_path].join('/')
+    start = [BASE_URL, BASE_OPDS_FOLDER, 'root.xml'].join('/')
     xml.id href
     xml.link(rel: OPDS::Rel::SELF,
              href: href,
@@ -417,31 +438,31 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
              type: OPDS::Link::NAVIGATION)
     xml.title "#{format.capitalize} Partitions"
     xml.updated now
-    xml.author do
-      write_feed_author xml
-    end
+    xml.author { write_feed_author xml }
 
     # All
     xml.entry do
-      href = [BASE_URL, BASE_DIR, format, 'all.xml'].join('/')
-      xml.id href
+      href = [BASE_URL, BASE_OPDS_FOLDER, format, 'all.xml'].join('/')
       xml.title 'All'
+      xml.id href
+      xml.updated now
+      xml.author { write_feed_author xml }
       xml.link(rel: OPDS::Rel::SUBSECTION,
                href: href,
                type: OPDS::Link::ACQUISITION)
-      xml.updated now
       xml.content('All', type: 'text')
     end
 
     instruments.each do |instrument|
       xml.entry do
-        href = [BASE_URL, BASE_DIR, format, "#{instrument}.xml"].join('/')
-        xml.id href
+        href = [BASE_URL, BASE_OPDS_FOLDER, format, "#{instrument}.xml"].join('/')
         xml.title instrument.capitalize
+        xml.id href
+        xml.updated now
+        xml.author { write_feed_author xml }
         xml.link(rel: OPDS::Rel::SUBSECTION,
                  href: href,
                  type: OPDS::Link::ACQUISITION)
-        xml.updated now
         xml.content(instrument.capitalize, type: 'text')
       end
     end
@@ -460,24 +481,22 @@ def write_all_entries(format, feed_path, now, docs, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
-    href = [BASE_URL, BASE_DIR, feed_path].join('/')
+    href = [BASE_URL, BASE_OPDS_FOLDER, feed_path].join('/')
     xml.id href
     xml.link(rel: OPDS::Rel::SELF,
              href: href,
              type: OPDS::Link::ACQUISITION)
     xml.link(rel: OPDS::Rel::START,
-             href: [BASE_URL, BASE_DIR, 'root.xml'].join('/'),
+             href: [BASE_URL, BASE_OPDS_FOLDER, 'root.xml'].join('/'),
              type: OPDS::Link::ACQUISITION)
     xml.link(rel: OPDS::Rel::UP,
-             href: [BASE_URL, BASE_DIR, "#{format}.xml"].join('/'),
+             href: [BASE_URL, BASE_OPDS_FOLDER, "#{format}.xml"].join('/'),
              type: OPDS::Link::ACQUISITION)
     xml.title "All #{format.capitalize} Partitions"
-    xml.author do
-      write_feed_author xml
-    end
+    xml.author { write_feed_author xml }
     xml.updated now
 
-    docs.sort_by { |doc| [author_hash_to_s(doc.author), doc.title] }.each do |doc|
+    docs.sort_by { [author_hash_to_s(_1.author), _1.title] }.each do |doc|
       write_entry(format, doc, now, xml)
     end
   end
@@ -495,24 +514,22 @@ def write_instrument_entries(format, instrument, now, docs, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
-    href = [BASE_URL, BASE_DIR, format, "#{instrument}.xml"].join('/')
+    href = [BASE_URL, BASE_OPDS_FOLDER, format, "#{instrument}.xml"].join('/')
     xml.id href
     xml.link(rel: OPDS::Rel::SELF,
              href: href,
              type: OPDS::Link::ACQUISITION)
     xml.link(rel: OPDS::Rel::START,
-             href: [BASE_URL, BASE_DIR, 'root.xml'].join('/'),
+             href: [BASE_URL, BASE_OPDS_FOLDER, 'root.xml'].join('/'),
              type: OPDS::Link::ACQUISITION)
     xml.link(rel: OPDS::Rel::UP,
-             href: [BASE_URL, BASE_DIR, "#{format}.xml"].join('/'),
+             href: [BASE_URL, BASE_OPDS_FOLDER, "#{format}.xml"].join('/'),
              type: OPDS::Link::ACQUISITION)
     xml.title "#{instrument.capitalize} Partitions"
-    xml.author do
-      write_feed_author xml
-    end
+    xml.author { write_feed_author xml }
     xml.updated now
 
-    docs.sort_by { |doc| [author_hash_to_s(doc.author), doc.title] }.each do |doc|
+    docs.sort_by { [author_hash_to_s(_1.author), _1.title] }.each do |doc|
       write_entry(format, doc, now, xml)
     end
   end
@@ -528,7 +545,7 @@ FOLDERS.each do |folder|
     docs.push(parse_entry(folder, pdf_file))
   end
 
-  found_instruments = Set[]
+  found_instruments = Set.new
 
   docs.each do |doc|
     found_instruments.merge(doc.keywords.intersection(INSTRUMENTS))
@@ -560,7 +577,7 @@ FOLDERS.each do |folder|
   # Print the feeds per instruments
   found_instruments.each do |instrument|
     format_instrument = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-      write_instrument_entries(folder, instrument, now, docs.select { |doc| doc.keywords.include?(instrument) }, xml)
+      write_instrument_entries(folder, instrument, now, docs.select { _1.keywords.include?(instrument) }, xml)
     end
 
     filepath = File.join(folder_path, "#{instrument}.xml")

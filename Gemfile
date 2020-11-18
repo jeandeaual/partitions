@@ -11,7 +11,6 @@ group :development do
   gem 'github-pages', '~> 209'
   gem 'rubocop', '~> 1.3.0'
   gem 'rubocop-performance', '~> 1.8.1'
-  gem 'solargraph'
 end
 
 group :test do

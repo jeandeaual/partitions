@@ -6,13 +6,29 @@ require 'fileutils'
 require 'net/http'
 require 'octokit'
 
+# GitHub access token (if nil, access the API anonymously)
+# @return [String, nil]
 ACCESS_TOKEN = ENV['GITHUB_TOKEN']
+# GitHub username
+# @return [String]
 GITHUB_USER = ENV.fetch('GITHUB_USER')
+# Prefix of repositories containing LilyPond documents
+# @return [String]
 REPO_PREFIX = 'lilypond-'
+# Repositories to ignore
+# @return [Array<String>]
 EXCLUDE = %w[lilypond-template lilypond-jekyll-template].freeze
+# File format folders (`a4` and `letter`)
+# @return [Array<String>]
 FOLDERS = %w[a4 letter].freeze
+# Branch on each repository where the built partitions are located
+# @return [String]
 BRANCH = 'gh-pages'
+# Jekyll Markdown file that should contain the list of repositories
+# @return [String]
 REPOSITORY_LIST_FILE = File.join('site', '_includes', 'repositories.markdown')
+# Default topics
+# @return [Array<String>]
 DEFAULT_TOPICS = %w[lilypond sheet-music].freeze
 
 # Generates a SHA1 digest, in the same way as `git hash-object`.

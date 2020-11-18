@@ -450,7 +450,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
       xml.link(rel: OPDS::Rel::SUBSECTION,
                href: href,
                type: OPDS::Link::ACQUISITION)
-      xml.content('All', type: 'text')
+      xml.content('All partitions', type: 'text')
     end
 
     instruments.each do |instrument|
@@ -463,7 +463,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
         xml.link(rel: OPDS::Rel::SUBSECTION,
                  href: href,
                  type: OPDS::Link::ACQUISITION)
-        xml.content(instrument.capitalize, type: 'text')
+        xml.content("#{instrument.capitalize} partitions", type: 'text')
       end
     end
   end

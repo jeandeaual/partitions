@@ -19,9 +19,9 @@ REPO_PREFIX = 'lilypond-'
 # Repositories to ignore
 # @return [Array<String>]
 EXCLUDE = %w[lilypond-template lilypond-jekyll-template].freeze
-# File format folders (`a4` and `letter`)
+# File format folders (`a4`, `letter`, `a3` or `tabloid`)
 # @return [Array<String>]
-FOLDERS = %w[a4 letter].freeze
+FOLDERS = %w[a4 letter a3 tabloid].freeze
 # Branch on each repository where the built partitions are located
 # @return [String]
 BRANCH = 'gh-pages'
@@ -109,7 +109,13 @@ client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo
              mode: 'a')
 
   FOLDERS.each do |folder|
-    files = client.contents(repo.full_name, path: folder, query: { ref: BRANCH })
+    begin
+      files = client.contents(repo.full_name, path: folder, query: { ref: BRANCH })
+    rescue Octokit::NotFound
+      # Folder doesn't exist in the repository, so skip
+      next
+    end
+
     next unless files
 
     dl_dir = File.join(GITHUB_USER, folder, repo.name)

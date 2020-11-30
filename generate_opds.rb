@@ -12,9 +12,9 @@ require 'set'
 # GitHub username
 # @return [String]
 GITHUB_USER = ENV.fetch('GITHUB_USER')
-# File format folders (`a4` and `letter`)
+# File format folders (`a4`, `letter`, `a3` or `tabloid`)
 # @return [Array<String>]
-FOLDERS = %w[a4 letter].freeze
+FOLDERS = %w[a4 letter a3 tabloid].freeze
 # Branch on each repository where the built partitions are located
 # @return [String]
 BRANCH = 'gh-pages'
@@ -320,7 +320,7 @@ end
 
 # Parse a PDF document.
 #
-# @param folder [String] either `a4` or `letter`
+# @param folder [String] either `a4`, `letter`, `a3` or `tabloid`
 # @param pdf_file [String] the path of the PDF file to parse
 # @return [Document] the parsed document
 def parse_entry(folder, pdf_file)
@@ -361,7 +361,7 @@ end
 
 # Parse a PDF document.
 #
-# @param format [String] either `a4` or `letter`
+# @param format [String] either `a4`, `letter`, `a3` or `tabloid`
 # @param doc [Document] the PDF document
 # @param now [String] the current time as an ISO8601 string
 # @param xml [Nokogiri::XML::Builder] the XML builder
@@ -413,7 +413,7 @@ end
 
 # Write the OPDS feeds containing all entries for a specific page format.
 #
-# @param format [String] either `a4` or `letter`
+# @param format [String] either `a4`, `letter`, `a3` or `tabloid`
 # @param feed_path [String] the last part of the OPDS feed URI
 # @param now [String] the current time as an ISO8601 string
 # @param docs [Array<Document>] the PDF documents
@@ -471,7 +471,7 @@ end
 
 # Write the OPDS feeds containing all entries for a specific page format.
 #
-# @param format [String] either `a4` or `letter`
+# @param format [String] either `a4`, `letter`, `a3` or `tabloid`
 # @param feed_path [String] the last part of the OPDS feed URI
 # @param now [String] the current time as an ISO8601 string
 # @param docs [Array<Document>] the PDF documents
@@ -504,7 +504,7 @@ end
 
 # Write the OPDS feeds containing all entries for a specific instrument.
 #
-# @param format [String] either `a4` or `letter`
+# @param format [String] either `a4`, `letter`, `a3` or `tabloid`
 # @param instrument [String] the instrument
 # @param now [String] the current time as an ISO8601 string
 # @param docs [Array<Document>] the PDF documents

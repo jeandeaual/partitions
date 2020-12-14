@@ -9,7 +9,7 @@ gem 'pdftoimage', '~> 0.1.7'
 
 group :development do
   gem 'github-pages', '~> 209'
-  gem 'rubocop', '~> 1.3.0'
+  gem 'rubocop', '~> 1.6.1'
   gem 'rubocop-performance', '~> 1.8.1'
 end
 

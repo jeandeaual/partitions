@@ -86,13 +86,17 @@ client.auto_paginate = true
 FileUtils.mkdir_p(File.dirname(REPOSITORY_LIST_FILE)) unless File.directory?(File.dirname(REPOSITORY_LIST_FILE))
 File.write(REPOSITORY_LIST_FILE, '')
 
-def partition_repo?(repo)
-  repo.name.start_with?(REPO_PREFIX) &&
-    repo.language == 'LilyPond' &&
-    !EXCLUDE.include?(repo.name)
+module Sawyer
+  class Resource # rubocop:disable Style/Documentation
+    def partition_repo?
+      name.start_with?(REPO_PREFIX) &&
+        language == 'LilyPond' &&
+        !EXCLUDE.include?(name)
+    end
+  end
 end
 
-client.repositories(GITHUB_USER).select(&method(:partition_repo?)).each do |repo|
+client.repositories(GITHUB_USER).select(&:partition_repo?).each do |repo|
   topics = client.topics(repo.full_name)
 
   topic_list = if topics.key?(:names) && !topics[:names].empty?

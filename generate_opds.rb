@@ -148,7 +148,8 @@ def write_root(feed_path, now, xml)
     xml.link(rel: OPDS::Rel::START,
              href: href,
              type: OPDS::Link::NAVIGATION)
-    xml.title 'Partitions'
+    xml.title 'LilyPond Partitions'
+    xml.subtitle 'Sheet music / partitions created using LilyPond.'
     xml.author { write_feed_author xml }
     FOLDERS.each do |folder|
       xml.entry do
@@ -159,7 +160,7 @@ def write_root(feed_path, now, xml)
                  href: href,
                  type: OPDS::Link::NAVIGATION)
         xml.updated now
-        xml.content("Partitions in #{folder.capitalize} format", type: 'text')
+        xml.content("Partitions in #{folder.capitalize} PDFs.", type: 'text')
       end
     end
   end
@@ -450,7 +451,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
       xml.link(rel: OPDS::Rel::SUBSECTION,
                href: href,
                type: OPDS::Link::ACQUISITION)
-      xml.content('All partitions', type: 'text')
+      xml.content('All partitions.', type: 'text')
     end
 
     instruments.each do |instrument|
@@ -463,7 +464,7 @@ def write_format_subsections(format, feed_path, now, instruments, xml)
         xml.link(rel: OPDS::Rel::SUBSECTION,
                  href: href,
                  type: OPDS::Link::ACQUISITION)
-        xml.content("#{instrument.capitalize} partitions", type: 'text')
+        xml.content("#{instrument.capitalize} partitions.", type: 'text')
       end
     end
   end

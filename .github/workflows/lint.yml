@@ -18,10 +18,14 @@ jobs:
         uses: actions/checkout@v2
         with:
           persist-credentials: false
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
       - name: Install the dependencies
         run: |
           # Required by pdftoimage
           sudo apt-get update && sudo apt-get -y install imagemagick poppler-utils
-          bundle install --jobs 4 --retry 3 --without development
+          bundle install --jobs 4 --retry 3
       - name: Run RuboCop
         run: bundle exec rubocop

@@ -15,6 +15,16 @@
             "isBackground": true
         },
         {
+            "label": "Jekyll doctor",
+            "type": "shell",
+            "command": "bundle exec jekyll doctor",
+            "options": {
+                "cwd": "${workspaceFolder}/site"
+            },
+            "group": "test",
+            "isBackground": false
+        },
+        {
             "label": "Build Jekyll",
             "type": "shell",
             "command": "bundle exec jekyll build",

@@ -5,16 +5,22 @@
             "label": "Serve Jekyll",
             "type": "shell",
             "command": "bundle exec jekyll serve --livereload",
+            "options": {
+                "cwd": "${workspaceFolder}/site"
+            },
             "group": {
                 "kind": "test",
                 "isDefault": true
             },
-            "isBackground": true,
+            "isBackground": true
         },
         {
             "label": "Build Jekyll",
             "type": "shell",
             "command": "bundle exec jekyll build",
+            "options": {
+                "cwd": "${workspaceFolder}/site"
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true

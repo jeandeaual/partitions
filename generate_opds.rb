@@ -8,10 +8,8 @@ require 'pdftoimage'
 require 'rss'
 require 'securerandom'
 require 'set'
+require_relative 'lib'
 
-# GitHub username
-# @return [String]
-GITHUB_USER = ENV.fetch('GITHUB_USER')
 # File format folders (`a4`, `letter`, `a3` or `tabloid`)
 # @return [Array<String>]
 FOLDERS = %w[a4 letter a3 tabloid].freeze
@@ -24,14 +22,6 @@ BASE_URL = '/partitions'
 # Folder on the Jekyll site containing the OPDS 1.2 feeds
 # @return [String]
 BASE_OPDS_FOLDER = 'opds'
-# List of instrument categories we want to create
-# @return [Array<String>]
-INSTRUMENTS = %w[
-  piano
-  bass
-  guitar
-  ukulele
-].freeze
 
 module PDF
   # Separators between items of the `Keywords` PDF metadata
@@ -135,7 +125,7 @@ now = Time.now.iso8601
 # @param now [String] the current time as an ISO8601 string
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_root(feed_path, now, xml)
+def write_opds_root(feed_path, now, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
@@ -167,7 +157,7 @@ def write_root(feed_path, now, xml)
 end
 
 feed_path = 'root.xml'
-root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') { write_root(feed_path, now, _1) }
+root = Nokogiri::XML::Builder.new(encoding: 'UTF-8') { write_opds_root(feed_path, now, _1) }
 
 # Create the OPDS directory
 opds_folder = File.join('site', BASE_OPDS_FOLDER)
@@ -224,7 +214,7 @@ Document = Struct.new(
 # @param keywords [Array<String>] the PDF keywords
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_categories(keywords, xml)
+def write_opds_categories(keywords, xml)
   # BISAC
   bisac_subcategory_set = false
 
@@ -235,7 +225,7 @@ def write_categories(keywords, xml)
     bisac_subcategory_set = true
   end
 
-  if %w[guitar bass mandolin].any? { keywords.include?(_1) }
+  if %w[guitar bass-guitar mandolin].any? { keywords.include?(_1) }
     xml.category(scheme: BISAC::URI,
                  term: BISAC::Term::PRINTED_MUSIC_FRETTED,
                  label: BISAC::Label::PRINTED_MUSIC_FRETTED)
@@ -308,7 +298,7 @@ end
 def parse_author(reader, doc)
   doc.author = {} if doc.author.nil?
 
-  %i[Composer Arranger Author].each do |key|
+  %i[Composer Author].each do |key|
     author_s = reader.info[key]
 
     next unless author_s
@@ -329,7 +319,7 @@ def parse_entry(folder, pdf_file)
   reader = PDF::Reader.new(pdf_file)
 
   doc.basename = File.basename(pdf_file, '.pdf')
-  doc.repository = File.dirname(pdf_file).delete_prefix(File.join(GITHUB_USER, folder, ''))
+  doc.repository = File.dirname(pdf_file).delete_prefix(File.join(Partitions::GITHUB_USER, folder, ''))
 
   # Generate the cover and thumbnail
   images = PDFToImage.open(pdf_file)
@@ -367,24 +357,26 @@ end
 # @param now [String] the current time as an ISO8601 string
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_entry(format, doc, now, xml)
+def write_opds_entry(format, doc, now, xml)
   xml.entry do
     xml.title doc.title
     xml.id doc.id
 
     # KOReader seems to only display the last author tag, so put the composer last
     doc.author.reverse_each do |title, authors|
-      xml.author do
-        # Put the type of author in a comment ("Composer", "Arranger" or "Author")
-        xml.comment " #{title} "
-        xml.name authors.join(', ')
+      authors.reverse_each do |author|
+        xml.author do
+          # Put the type of author in a comment ("Composer", "Arranger" or "Author")
+          xml.comment " #{title} "
+          xml.name author
+        end
       end
     end
 
     xml[RSS::DC_PREFIX].issued doc.created_at || now
     xml.updated doc.pushed_at || now
 
-    write_categories(doc.keywords, xml)
+    write_opds_categories(doc.keywords, xml)
 
     xml.summary(doc.subject, type: 'text')
 
@@ -395,13 +387,13 @@ def write_entry(format, doc, now, xml)
              href: doc.thumbnail_href,
              type: 'image/jpeg')
     xml.link(rel: OPDS::Rel::RELATED,
-             href: "https://#{GITHUB_USER}.github.io/#{doc.repository}",
+             href: "https://#{Partitions::GITHUB_USER}.github.io/#{doc.repository}",
              type: 'text/html',
              title: 'Website')
     xml.link(rel: OPDS::Rel::OPEN_ACCESS,
              href: [
                'https://raw.githubusercontent.com',
-               GITHUB_USER,
+               Partitions::GITHUB_USER,
                doc.repository,
                BRANCH,
                format,
@@ -421,7 +413,7 @@ end
 # @param instruments [Set<String>] the instruments
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_format_subsections(format, feed_path, now, instruments, xml)
+def write_opds_format_subsections(format, feed_path, now, instruments, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
@@ -478,7 +470,7 @@ end
 # @param docs [Array<Document>] the PDF documents
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_all_entries(format, feed_path, now, docs, xml)
+def write_all_opds_entries(format, feed_path, now, docs, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
@@ -498,7 +490,7 @@ def write_all_entries(format, feed_path, now, docs, xml)
     xml.updated now
 
     docs.sort_by { [author_hash_to_s(_1.author), _1.title] }.each do |doc|
-      write_entry(format, doc, now, xml)
+      write_opds_entry(format, doc, now, xml)
     end
   end
 end
@@ -511,7 +503,7 @@ end
 # @param docs [Array<Document>] the PDF documents
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
-def write_instrument_entries(format, instrument, now, docs, xml)
+def write_opds_instrument_entries(format, instrument, now, docs, xml)
   xml.feed('xmlns' => RSS::Atom::URI,
            "xmlns:#{RSS::DC_PREFIX}" => RSS::DC_URI,
            "xmlns:#{OPDS::PREFIX}" => OPDS::URI) do
@@ -531,7 +523,7 @@ def write_instrument_entries(format, instrument, now, docs, xml)
     xml.updated now
 
     docs.sort_by { [author_hash_to_s(_1.author), _1.title] }.each do |doc|
-      write_entry(format, doc, now, xml)
+      write_opds_entry(format, doc, now, xml)
     end
   end
 end
@@ -542,19 +534,21 @@ FOLDERS.each do |folder|
   docs = []
 
   # Parse the PDF files
-  Dir["#{GITHUB_USER}/#{folder}/**/*.pdf"].each do |pdf_file|
+  Dir["#{Partitions::GITHUB_USER}/#{folder}/**/*.pdf"].each do |pdf_file|
     docs.push(parse_entry(folder, pdf_file))
   end
 
   found_instruments = Set.new
 
   docs.each do |doc|
-    found_instruments.merge(doc.keywords.intersection(INSTRUMENTS))
+    found_instruments.merge(
+      doc.keywords.intersection(Partitions::INSTRUMENTS.map { _1 == 'bass-guitar' ? 'bass' : _1 })
+    )
   end
 
   # Print the navigation
   format_categories = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-    write_format_subsections(folder, feed_path, now, found_instruments, xml)
+    write_opds_format_subsections(folder, feed_path, now, found_instruments, xml)
   end
 
   filepath = File.join(opds_folder, feed_path)
@@ -568,7 +562,7 @@ FOLDERS.each do |folder|
   feed_path = [folder, 'all.xml'].join('/')
 
   format_all = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-    write_all_entries(folder, feed_path, now, docs, xml)
+    write_all_opds_entries(folder, feed_path, now, docs, xml)
   end
 
   filepath = File.join(folder_path, 'all.xml')
@@ -578,7 +572,7 @@ FOLDERS.each do |folder|
   # Print the feeds per instruments
   found_instruments.each do |instrument|
     format_instrument = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-      write_instrument_entries(folder, instrument, now, docs.select { _1.keywords.include?(instrument) }, xml)
+      write_opds_instrument_entries(folder, instrument, now, docs.select { _1.keywords.include?(instrument) }, xml)
     end
 
     filepath = File.join(folder_path, "#{instrument}.xml")

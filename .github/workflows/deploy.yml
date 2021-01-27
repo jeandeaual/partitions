@@ -26,7 +26,8 @@ jobs:
         run: |
           # Required by pdftoimage
           sudo apt-get update && sudo apt-get -y install imagemagick poppler-utils
-          bundle install --jobs 4 --retry 3 --without development
+          bundle config set without 'development'
+          bundle install --jobs 4 --retry 3
       - name: Download the PDFs
         env:
           GITHUB_TOKEN: ${{ secrets.GH_API_TOKEN }}
@@ -36,11 +37,13 @@ jobs:
         env:
           GITHUB_USER: ${{ github.actor }}
         run: ruby generate_opds.rb
+      - name: Build the Jekyll site
+        run: cd site && bundle exec jekyll build
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: site
+          FOLDER: site/_site
           CLEAN: true
           SINGLE_COMMIT: true

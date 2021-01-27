@@ -1,11 +1,13 @@
 ---
-layout: default
+layout: timestamped
 ---
 
-# Partitions
+* [All partitions]({% link all.markdown %})
+* [Bass guitar partitions]({% link bass-guitar.markdown %})
+* [Guitar partitions]({% link guitar.markdown %})
+* [Ocarina partitions]({% link ocarina.markdown %})
+* [Piano partitions]({% link piano.markdown %})
+* [Shamisen partitions]({% link shamisen.markdown %})
+* [Ukulele partitions]({% link ukulele.markdown %})
 
-{% include repositories.markdown %}
-
-# [OPDS Feed]({{ "/opds/root.xml" | relative_url }})
-
-Last update on {{ site.time | date: "%Y-%m-%d %H:%M UTC" }}.
+# [OPDS Feed]({% link opds/root.xml %})

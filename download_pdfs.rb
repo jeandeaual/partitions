@@ -6,13 +6,11 @@ require 'fileutils'
 require 'net/http'
 require 'octokit'
 require 'rss'
+require_relative 'lib'
 
 # GitHub access token (if nil, access the API anonymously)
 # @return [String, nil]
 ACCESS_TOKEN = ENV['GITHUB_TOKEN']
-# GitHub username
-# @return [String]
-GITHUB_USER = ENV.fetch('GITHUB_USER')
 # Prefix of repositories containing LilyPond documents
 # @return [String]
 REPO_PREFIX = 'lilypond-'
@@ -25,9 +23,12 @@ FOLDERS = %w[a4 letter a3 tabloid].freeze
 # Branch on each repository where the built partitions are located
 # @return [String]
 BRANCH = 'gh-pages'
+# Folder container the repository list files
+# @return [String]
+REPOSITORY_LIST_FOLDER = File.join('site', '_includes')
 # Jekyll Markdown file that should contain the list of repositories
 # @return [String]
-REPOSITORY_LIST_FILE = File.join('site', '_includes', 'repositories.markdown')
+REPOSITORY_LIST_ALL_FILE = File.join(REPOSITORY_LIST_FOLDER, 'all_repositories.markdown')
 # Default topics
 # @return [Array<String>]
 DEFAULT_TOPICS = %w[lilypond sheet-music].freeze
@@ -72,6 +73,24 @@ def download_file(url, file_path)
   end
 end
 
+# Generate a Markdown list of hashtags basic on a repository's topic list.
+#
+# @param topics [Array<String>] the topic list
+# @return [String] the Markdown list
+def generate_tag_list(topics)
+  if topics.empty?
+    ''
+  else
+    (topics.reject { DEFAULT_TOPICS.include?(_1) }.map do
+       if Partitions::INSTRUMENTS.include?(_1)
+         "[&#35;#{_1}]({% link #{_1}.markdown %})"
+       else
+         "&#35;#{_1}"
+       end
+     end.join(', ')).prepend('*').concat("*\n\n")
+  end
+end
+
 # To prevent a warning when calling the Topics API
 GITHUB_MEDIA_TYPE = 'application/vnd.github.mercy-preview+json'
 
@@ -82,9 +101,12 @@ client = if ACCESS_TOKEN.nil? || ACCESS_TOKEN.empty?
          end
 client.auto_paginate = true
 
-# Empty the repository list
-FileUtils.mkdir_p(File.dirname(REPOSITORY_LIST_FILE)) unless File.directory?(File.dirname(REPOSITORY_LIST_FILE))
-File.write(REPOSITORY_LIST_FILE, '')
+# Empty the repository lists
+FileUtils.mkdir_p(REPOSITORY_LIST_FOLDER) unless File.directory?(REPOSITORY_LIST_FOLDER)
+File.write(REPOSITORY_LIST_ALL_FILE, '')
+Partitions::INSTRUMENTS.each do |instrument|
+  File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.markdown"), '')
+end
 
 module Sawyer
   class Resource # rubocop:disable Style/Documentation
@@ -96,21 +118,25 @@ module Sawyer
   end
 end
 
-client.repositories(GITHUB_USER).select(&:partition_repo?).each do |repo|
-  topics = client.topics(repo.full_name)
+client.repositories(Partitions::GITHUB_USER).select(&:partition_repo?).each do |repo|
+  topics_response = client.topics(repo.full_name)
+  topics = if topics_response.key?(:names) && !topics_response[:names].empty?
+             topics_response[:names]
+           else
+             []
+           end
+  topic_tag_list = generate_tag_list(topics)
+  repo_description = "## [#{repo.name.delete_prefix(REPO_PREFIX)}](#{repo.homepage})\n\n"\
+                     "#{repo.description}\n\n"\
+                     "#{topic_tag_list}"
 
-  topic_list = if topics.key?(:names) && !topics[:names].empty?
-                 (topics[:names].reject { DEFAULT_TOPICS.include?(_1) }.map { "&#35;#{_1}" }.join(', '))
-                   .prepend('*')
-                   .concat("*\n\n")
-               else
-                 ''
-               end
+  # Update site/_includes/all_repositories.markdown
+  File.write(REPOSITORY_LIST_ALL_FILE, repo_description, mode: 'a')
 
-  # Update site/_includes/repositories.markdown
-  File.write(REPOSITORY_LIST_FILE,
-             "## [#{repo.name.delete_prefix(REPO_PREFIX)}](#{repo.homepage})\n\n#{repo.description}\n\n#{topic_list}",
-             mode: 'a')
+  topics.intersection(Partitions::INSTRUMENTS).each do |instrument|
+    # Update site/_includes/#{instrument}.markdown
+    File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.markdown"), repo_description, mode: 'a')
+  end
 
   FOLDERS.each do |folder|
     begin
@@ -122,7 +148,7 @@ client.repositories(GITHUB_USER).select(&:partition_repo?).each do |repo|
 
     next unless files
 
-    dl_dir = File.join(GITHUB_USER, folder, repo.name)
+    dl_dir = File.join(Partitions::GITHUB_USER, folder, repo.name)
 
     # Create the download directory
     FileUtils.mkdir_p(dl_dir) unless File.directory?(dl_dir)

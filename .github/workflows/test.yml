@@ -1,4 +1,4 @@
-name: lint
+name: test
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
     paths-ignore:
       - 'README.md'
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
@@ -27,5 +27,5 @@ jobs:
           # Required by pdftoimage
           sudo apt-get update && sudo apt-get -y install imagemagick poppler-utils
           bundle install --jobs 4 --retry 3
-      - name: Run RuboCop
-        run: bundle exec rubocop
+      - name: Run the tests
+        run: bundle exec rspec

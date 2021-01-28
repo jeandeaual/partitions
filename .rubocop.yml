@@ -3,6 +3,7 @@ require:
 
 AllCops:
   NewCops: enable
+  TargetRubyVersion: 2.7
 Metrics/AbcSize:
   Max: 60
 Metrics/BlockLength:

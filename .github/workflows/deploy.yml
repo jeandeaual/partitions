@@ -39,6 +39,8 @@ jobs:
         run: ruby generate_opds.rb
       - name: Build the Jekyll site
         run: cd site && bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:

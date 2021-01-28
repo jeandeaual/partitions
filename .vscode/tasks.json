@@ -15,14 +15,19 @@
             "isBackground": true
         },
         {
+            "label": "Test",
+            "type": "shell",
+            "command": "bundle exec rspec",
+            "group": "test"
+        },
+        {
             "label": "Jekyll doctor",
             "type": "shell",
             "command": "bundle exec jekyll doctor",
             "options": {
                 "cwd": "${workspaceFolder}/site"
             },
-            "group": "test",
-            "isBackground": false
+            "group": "test"
         },
         {
             "label": "Build Jekyll",

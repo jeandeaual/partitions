@@ -3,8 +3,8 @@
 ---
 
 {
-  "name": "Partitions",
-  "short_name": "Partitions",
+  "name": "{{ site.title }}",
+  "short_name": "{{ site.short_title | default: site.title }}",
   "icons": [
     {
       "src": "{% link android-chrome-192x192.png %}",

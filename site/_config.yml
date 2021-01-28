@@ -1,13 +1,20 @@
 # Layout config
 title: LilyPond Partitions
+short_title: Partitions
 description: >-
   Partitions built using LilyPond.
 baseurl: "/partitions"
 url: https://jeandeaual.github.io
 repository: jeandeaual/partitions
 lang: en-US
-show_downloads: false
 # Jekyll config
 permalink: pretty
 plugins:
+  - jekyll-minifier
   - jekyll-seo-tag
+  - jekyll-timeago
+jekyll-minifier:
+  remove_intertag_spaces: true
+  # exclude:
+  #   - 'opds/*.xml'
+  #   - 'opds/**/*.xml'

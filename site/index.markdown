@@ -1,5 +1,6 @@
 ---
 layout: timestamped
+id: index
 ---
 
 * [All partitions]({% link all.markdown %})

@@ -3,13 +3,13 @@ on:
   push:
     branches:
       - master
-    paths-ignore:
-      - 'README.md'
+    paths:
+      - '**.rb'
   pull_request:
     branches:
       - master
-    paths-ignore:
-      - 'README.md'
+    paths:
+      - '**.rb'
 jobs:
   lint:
     runs-on: ubuntu-latest

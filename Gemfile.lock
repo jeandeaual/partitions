@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    Ascii85 (1.0.3)
+    Ascii85 (1.1.0)
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     afm (0.2.2)
@@ -43,6 +43,9 @@ GEM
       rouge (~> 3.0)
       safe_yaml (~> 1.0)
       terminal-table (~> 2.0)
+    jekyll-github-metadata (2.13.0)
+      jekyll (>= 3.4, < 5.0)
+      octokit (~> 4.0, != 4.4.0)
     jekyll-minifier (0.1.10)
       cssminify2 (~> 2.0)
       htmlcompressor (~> 0.4)
@@ -84,8 +87,8 @@ GEM
       ast (~> 2.4.1)
     pathutil (0.16.2)
       forwardable-extended (~> 2.6)
-    pdf-reader (2.4.1)
-      Ascii85 (~> 1.0.0)
+    pdf-reader (2.4.2)
+      Ascii85 (~> 1.0)
       afm (~> 0.2.1)
       hashery (~> 2.0)
       ruby-rc4
@@ -111,10 +114,10 @@ GEM
     rspec-expectations (3.10.1)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.10.0)
-    rspec-mocks (3.10.1)
+    rspec-mocks (3.10.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.10.0)
-    rspec-support (3.10.1)
+    rspec-support (3.10.2)
     rubocop (1.8.1)
       parallel (~> 1.10)
       parser (>= 3.0.0.0)
@@ -153,6 +156,7 @@ PLATFORMS
 
 DEPENDENCIES
   jekyll (~> 4.2)
+  jekyll-github-metadata (~> 2.13.0)
   jekyll-minifier (~> 0.1.10)
   jekyll-seo-tag (~> 2.7.1)
   jekyll-timeago (~> 0.13.1)

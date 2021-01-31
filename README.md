@@ -4,7 +4,9 @@
 ![test](https://github.com/jeandeaual/partitions/workflows/test/badge.svg)
 ![lint](https://github.com/jeandeaual/partitions/workflows/lint/badge.svg)
 
-Generates a [website](https://jeandeaual.github.io/partitions) and [OPDS feed](https://jeandeaual.github.io/partitions/opds/root.xml) listing the LilyPond partitions hosted on my GitHub.
+Generates a [website](https://jeandeaual.github.io/partitions)
+and [OPDS feed](https://jeandeaual.github.io/partitions/opds/root.xml)
+listing the LilyPond partitions hosted on my GitHub account.
 
 ## Prerequisites
 

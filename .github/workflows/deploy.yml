@@ -5,6 +5,8 @@ on:
       - master
     paths-ignore:
       - 'README.md'
+      - '.github/workflows/lint.yml'
+      - '.github/workflows/test.yml'
   # Can be triggered via the web UI or by running `curl -XPOST -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/jeandeaual/partitions/actions/workflows/deploy.yml/dispatches --data '{"ref": "master"}'` from a GitHub Action
   workflow_dispatch:
     inputs: {}

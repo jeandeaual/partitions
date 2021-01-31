@@ -10,6 +10,7 @@ lang: en-US
 # Jekyll config
 permalink: pretty
 plugins:
+  - jekyll-github-metadata
   - jekyll-minifier
   - jekyll-seo-tag
   - jekyll-timeago

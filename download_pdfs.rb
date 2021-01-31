@@ -28,7 +28,7 @@ BRANCH = 'gh-pages'
 REPOSITORY_LIST_FOLDER = File.join('site', '_includes')
 # Jekyll Markdown file that should contain the list of repositories
 # @return [String]
-REPOSITORY_LIST_ALL_FILE = File.join(REPOSITORY_LIST_FOLDER, 'all_repositories.markdown')
+REPOSITORY_LIST_ALL_FILE = File.join(REPOSITORY_LIST_FOLDER, 'all_repositories.md')
 # Default topics
 # @return [Array<String>]
 DEFAULT_TOPICS = %w[lilypond sheet-music].freeze
@@ -83,7 +83,7 @@ def generate_tag_list(topics)
   else
     (topics.reject { DEFAULT_TOPICS.include?(_1) }.map do
        if Partitions::INSTRUMENTS.include?(_1)
-         "[&#35;#{_1}]({% link #{_1}.markdown %})"
+         "[&#35;#{_1}]({% link #{_1}.md %})"
        else
          "&#35;#{_1}"
        end
@@ -105,7 +105,7 @@ client.auto_paginate = true
 FileUtils.mkdir_p(REPOSITORY_LIST_FOLDER) unless File.directory?(REPOSITORY_LIST_FOLDER)
 File.write(REPOSITORY_LIST_ALL_FILE, '')
 Partitions::INSTRUMENTS.each do |instrument|
-  File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.markdown"), '')
+  File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.md"), '')
 end
 
 module Sawyer
@@ -130,12 +130,12 @@ client.repositories(Partitions::GITHUB_USER).select(&:partition_repo?).each do |
                      "#{repo.description}\n\n"\
                      "#{topic_tag_list}"
 
-  # Update site/_includes/all_repositories.markdown
+  # Update site/_includes/all_repositories.md
   File.write(REPOSITORY_LIST_ALL_FILE, repo_description, mode: 'a')
 
   topics.intersection(Partitions::INSTRUMENTS).each do |instrument|
-    # Update site/_includes/#{instrument}.markdown
-    File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.markdown"), repo_description, mode: 'a')
+    # Update site/_includes/#{instrument}.md
+    File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.md"), repo_description, mode: 'a')
   end
 
   FOLDERS.each do |folder|

@@ -4,4 +4,4 @@ layout: timestamped
 
 # Ocarina Partitions
 
-{% include ocarina.markdown %}
+{% include ocarina.md %}

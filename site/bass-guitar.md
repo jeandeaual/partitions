@@ -4,4 +4,4 @@ layout: timestamped
 
 # Bass Guitar Partitions
 
-{% include bass-guitar.markdown %}
+{% include bass-guitar.md %}

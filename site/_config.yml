@@ -3,8 +3,8 @@ title: LilyPond Partitions
 short_title: Partitions
 description: >-
   Partitions built using LilyPond.
-baseurl: "/partitions"
-url: https://jeandeaual.github.io
+baseurl: /partitions
+url: https://alexis.jeandeau.fr
 repository: jeandeaual/partitions
 lang: en-US
 # Jekyll config

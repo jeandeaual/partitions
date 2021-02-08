@@ -2,6 +2,6 @@
 layout: timestamped
 ---
 
-# All Partitions
+## All Partitions
 
 {% include all_repositories.md %}

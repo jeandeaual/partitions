@@ -33,6 +33,11 @@ h2 {
   color: #393939;
 }
 
+// Reduce the margin between the repository names and the tags
+h3 {
+  margin-bottom: 0.5em;
+}
+
 h3, h4, h5, h6 {
   color: #494949;
 }

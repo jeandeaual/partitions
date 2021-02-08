@@ -2,6 +2,6 @@
 layout: timestamped
 ---
 
-# Ukulele Partitions
+## Ukulele Partitions
 
 {% include ukulele.md %}

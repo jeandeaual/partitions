@@ -2,6 +2,6 @@
 layout: timestamped
 ---
 
-# Bass Guitar Partitions
+## Bass Guitar Partitions
 
 {% include bass-guitar.md %}

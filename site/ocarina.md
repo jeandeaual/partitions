@@ -2,6 +2,6 @@
 layout: timestamped
 ---
 
-# Ocarina Partitions
+## Ocarina Partitions
 
 {% include ocarina.md %}

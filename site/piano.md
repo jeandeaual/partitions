@@ -2,6 +2,6 @@
 layout: timestamped
 ---
 
-# Piano Partitions
+## Piano Partitions
 
 {% include piano.md %}

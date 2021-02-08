@@ -126,8 +126,7 @@ client.repositories(Partitions::GITHUB_USER).select(&:partition_repo?).each do |
              []
            end
   topic_tag_list = generate_tag_list(topics)
-  repo_description = "## [#{repo.name.delete_prefix(REPO_PREFIX)}](#{repo.homepage})\n\n"\
-                     "#{repo.description}\n\n"\
+  repo_description = "### [#{repo.description.delete_suffix('.').delete_suffix('。')}](#{repo.homepage})\n\n"\
                      "#{topic_tag_list}"
 
   # Update site/_includes/all_repositories.md

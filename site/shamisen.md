@@ -2,6 +2,6 @@
 layout: timestamped
 ---
 
-# Shamisen Partitions
+## Shamisen Partitions
 
 {% include shamisen.md %}

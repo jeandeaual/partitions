@@ -4,4 +4,4 @@ layout: default
 
 {{ content }}
 
-Last update {{ site.time | timeago }}.
+Last update on {{ site.time | date: "%Y-%m-%d" }}.

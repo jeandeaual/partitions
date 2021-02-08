@@ -13,7 +13,6 @@ plugins:
   - jekyll-github-metadata
   - jekyll-minifier
   - jekyll-seo-tag
-  - jekyll-timeago
 jekyll-minifier:
   remove_intertag_spaces: true
   # exclude:

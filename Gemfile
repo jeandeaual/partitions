@@ -17,8 +17,8 @@ group :jekyll_plugins do
 end
 
 group :development do
-  gem 'rubocop', '~> 1.8.1'
-  gem 'rubocop-performance', '~> 1.9.2'
+  gem 'rubocop', '~> 1.20.0'
+  gem 'rubocop-performance', '~> 1.11.5'
 end
 
 group :test, :development do

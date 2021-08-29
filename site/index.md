@@ -11,4 +11,4 @@ id: index
 * [Shamisen partitions]({% link shamisen.md %})
 * [Ukulele partitions]({% link ukulele.md %})
 
-# [OPDS Feed]({% link opds/root.xml %})
+## [OPDS Catalog]({% link opds/root.xml %})

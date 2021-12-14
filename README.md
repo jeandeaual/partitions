@@ -10,7 +10,7 @@ listing the LilyPond partitions hosted on my GitHub account.
 
 ## Prerequisites
 
-* [Ruby 2.7](https://www.ruby-lang.org/en/downloads/) needs to be installed
+* [Ruby 3](https://www.ruby-lang.org/en/downloads/) needs to be installed
 * Install the Ruby dependencies (the first line is optional):
     ```sh
     BUNDLE_WITHOUT=development bundle install

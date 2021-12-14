@@ -7,7 +7,7 @@ on:
       - 'README.md'
       - '.github/workflows/lint.yml'
       - '.github/workflows/test.yml'
-  # Can be triggered via the web UI or by running `curl -XPOST -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/jeandeaual/partitions/actions/workflows/deploy.yml/dispatches --data '{"ref": "master"}'` from a GitHub Action
+  # Can be triggered via the web UI or by running `curl -XPOST -u "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" -H "Content-Type: application/json" https://api.github.com/repos/jeandeaual/partitions/actions/workflows/deploy.yml/dispatches --data '{"ref": "master"}'` from a GitHub Action
   workflow_dispatch:
     inputs: {}
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: '3.0'
       - name: Install the dependencies
         run: |
           # Required by pdftoimage
@@ -45,6 +45,7 @@ jobs:
           JEKYLL_ENV: production
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@3.7.1
+        if: ${{ !env.ACT }}
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages

@@ -3,13 +3,13 @@
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
-            // Update 'VARIANT' to pick a Ruby version: 2, 2.7, 2.6, 2.5
-            "VARIANT": "2.7"
+            // Update 'VARIANT' to pick a Ruby version: 3, 3.0, 2, 2.7, 2.6, 2.5
+            "VARIANT": "3.0"
         }
     },
     // Set *default* container specific settings.json values on container create.
     "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
+        "terminal.integrated.defaultProfile.linux": "bash"
     },
     // Add the IDs of extensions you want installed when the container is created.
     "extensions": [
@@ -17,7 +17,8 @@
         "wingrunr21.vscode-ruby",
         "castwide.solargraph",
         "misogi.ruby-rubocop",
-        "sissel.shopify-liquid"
+        "sissel.shopify-liquid",
+        "eamodio.gitlens"
     ],
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     "forwardPorts": [

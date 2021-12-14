@@ -1,4 +1,4 @@
-ARG VARIANT="2"
+ARG VARIANT="3"
 FROM mcr.microsoft.com/vscode/devcontainers/ruby:0-${VARIANT}
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \

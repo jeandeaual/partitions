@@ -17,10 +17,13 @@ group :jekyll_plugins do
 end
 
 group :development do
+  gem 'rbs', '~> 1.7'
   gem 'rubocop', '~> 1.23'
   gem 'rubocop-performance', '~> 1.12'
   # For jekyll serve
   gem 'webrick', '~> 1.7'
+  gem 'steep', '~> 0.47'
+  gem 'typeprof', '~> 0.20'
 end
 
 group :test, :development do

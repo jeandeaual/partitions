@@ -1,0 +1,92 @@
+BASE_URL: String
+BASE_OPDS_FOLDER: String
+
+module PDF
+  KEYWORD_SEPARATORS: Array[String]
+
+  class Reader
+    def keywords: () -> (Array[String])
+  end
+end
+
+module OPDS
+  BASE_URI: String
+  PREFIX: String
+  URI: String
+
+  module Rel
+    SELF: String
+    START: String
+    UP: String
+    SUBSECTION: String
+    RELATED: String
+    CRAWLABLE: String
+    ACQUISITION: String
+    OPEN_ACCESS: String
+    IMAGE: String
+    THUMBNAIL: String
+  end
+
+  module Link
+    BASE_PROFILE: String
+    ACQUISITION: String
+    NAVIGATION: String
+  end
+end
+
+module BISAC
+  URI: String
+
+  module Term
+    PRINTED_MUSIC_GENERAL: String
+    PRINTED_MUSIC_BAND: String
+    PRINTED_MUSIC_FRETTED: String
+    PRINTED_MUSIC_PERCUSSION: String
+    PRINTED_MUSIC_PIANO: String
+  end
+
+  module Label
+    PRINTED_MUSIC_GENERAL: String
+    PRINTED_MUSIC_BAND: String
+    PRINTED_MUSIC_FRETTED: String
+    PRINTED_MUSIC_PERCUSSION: String
+    PRINTED_MUSIC_PIANO: String
+  end
+end
+
+module LCSH
+  URI: String
+
+  module Term
+    SHEET_MUSIC: String
+  end
+end
+
+class Document
+  attr_accessor id: String
+  attr_accessor title: String
+  attr_accessor author: Hash[String, Array[String]]
+  attr_accessor subject: String
+  attr_accessor basename: String
+  attr_accessor repository: String
+  attr_accessor cover_href: String
+  attr_accessor cover_path: String
+  attr_accessor thumbnail_href: String
+  attr_accessor thumbnail_path: String
+  attr_accessor keywords: Array[String]
+  attr_accessor created_at: String
+  attr_accessor pushed_at: String
+end
+
+# def write_feed_author: (xml: Nokogiri::XML::Builder) -> void
+# def write_opds_root: (feed_path: String, now: String, xml: Nokogiri::XML::Builder) -> void
+# def write_opds_categories: (keywords: Array[String], xml: Nokogiri::XML::Builder) -> untyped
+# def generate_cover: (image: PDFToImage::Image, basename: String, repository: String, cover_folder: String) -> Array[[String, String]]
+# def generate_thumbnail: (image: PDFToImage::Image, basename: String, repository: String, cover_folder: String) -> Array[[String, String]]
+def author_hash_to_s: (author: Hash[String, Array[String]]) -> String
+# def parse_author: (reader: PDF::Reader, doc: Document) -> void
+def parse_entry: (folder: String, pdf_file: String) -> Document
+# def write_opds_entry: (format: String, doc: Document, now: String, xml: Nokogiri::XML::Builder) -> void
+# def write_opds_format_subsections: (format: String, feed_path: String, now: String, instruments: Set[String], xml: Nokogiri::XML::Builder) -> void
+# def write_all_opds_entries: (format: String, feed_path: String, now: String, docs: Array[Documents], xml: Nokogiri::XML::Builder) -> void
+# def write_opds_instrument_entries: (format: String, instrument: String, now: String, docs: Array[Document], xml: Nokogiri::XML::Builder) -> void

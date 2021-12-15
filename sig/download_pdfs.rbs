@@ -1,0 +1,16 @@
+ACCESS_TOKEN: String?
+REPO_PREFIX: String
+EXCLUDE: Array[String]
+REPOSITORY_LIST_FOLDER: String
+REPOSITORY_LIST_ALL_FILE: String
+DEFAULT_TOPICS: Array[String]
+
+module Sawyer
+  class Resource
+    def partition_repo?: () -> bool
+  end
+end
+
+def github_sha1_hash_file: (file_path: String) -> String
+def download_file: (url: String, file_path: String) -> void
+def generate_tag_list: (topics: Array[String]) -> String

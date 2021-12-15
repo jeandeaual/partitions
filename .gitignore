@@ -17,6 +17,9 @@ site/_includes/
 /test/version_tmp/
 /tmp/
 
+# RBS
+/.gem_rbs_collection/
+
 # Documentation cache and generated files
 /.yardoc/
 /_yardoc/

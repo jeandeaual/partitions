@@ -1,0 +1,6 @@
+module Partitions
+  GITHUB_USER: String
+  INSTRUMENTS: Array[String]
+  FOLDERS: Array[String]
+  BRANCH: String
+end

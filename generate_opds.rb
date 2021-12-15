@@ -10,12 +10,6 @@ require 'securerandom'
 require 'set'
 require_relative 'lib'
 
-# File format folders (`a4`, `letter`, `a3` or `tabloid`)
-# @return [Array<String>]
-FOLDERS = %w[a4 letter a3 tabloid].freeze
-# Branch on each repository where the built partitions are located
-# @return [String]
-BRANCH = 'gh-pages'
 # Base folder of the Jekyll website
 # @return [String]
 BASE_URL = '/partitions'
@@ -52,7 +46,7 @@ module OPDS
   private_constant :BASE_URI
 
   PREFIX = 'opds'
-  URI = "#{BASE_URI}/2010/catalog"
+  URI = "#{BASE_URI}/2010/catalog".freeze
 
   module Rel
     SELF = 'self'
@@ -60,19 +54,19 @@ module OPDS
     UP = 'up'
     SUBSECTION = 'subsection'
     RELATED = 'related'
-    CRAWLABLE = "#{BASE_URI}/crawlable"
-    ACQUISITION = "#{BASE_URI}/acquisition"
-    OPEN_ACCESS = "#{ACQUISITION}/open-access"
-    IMAGE = "#{BASE_URI}/image"
-    THUMBNAIL = "#{IMAGE}/thumbnail"
+    CRAWLABLE = "#{BASE_URI}/crawlable".freeze
+    ACQUISITION = "#{BASE_URI}/acquisition".freeze
+    OPEN_ACCESS = "#{ACQUISITION}/open-access".freeze
+    IMAGE = "#{BASE_URI}/image".freeze
+    THUMBNAIL = "#{IMAGE}/thumbnail".freeze
   end
 
   module Link
     BASE_PROFILE = 'application/atom+xml;profile=opds-catalog;kind='
     private_constant :BASE_PROFILE
 
-    ACQUISITION = "#{BASE_PROFILE}acquisition"
-    NAVIGATION = "#{BASE_PROFILE}navigation"
+    ACQUISITION = "#{BASE_PROFILE}acquisition".freeze
+    NAVIGATION = "#{BASE_PROFILE}navigation".freeze
   end
 end
 
@@ -141,7 +135,7 @@ def write_opds_root(feed_path, now, xml)
     xml.title 'LilyPond Partitions'
     xml.subtitle 'Sheet music / partitions created using LilyPond.'
     xml.author { write_feed_author xml }
-    FOLDERS.each do |folder|
+    Partitions::FOLDERS.each do |folder|
       xml.entry do
         href = [BASE_URL, BASE_OPDS_FOLDER, "#{folder}.xml"].join('/')
         xml.id href
@@ -287,7 +281,7 @@ end
 # @param author [Hash<String, Array<String>>] the author(s)
 # @return [String] the sortable string
 def author_hash_to_s(author)
-  author.map { _2 }.flatten.join(', ') || ''
+  author.map { |_, value| value }.flatten.join(', ') || ''
 end
 
 # Parse the author of a PDF document.
@@ -395,7 +389,7 @@ def write_opds_entry(format, doc, now, xml)
                'https://raw.githubusercontent.com',
                Partitions::GITHUB_USER,
                doc.repository,
-               BRANCH,
+               Partitions::BRANCH,
                format,
                "#{doc.basename}.pdf"
              ].join('/'),
@@ -409,7 +403,6 @@ end
 # @param format [String] either `a4`, `letter`, `a3` or `tabloid`
 # @param feed_path [String] the last part of the OPDS feed URI
 # @param now [String] the current time as an ISO8601 string
-# @param docs [Array<Document>] the PDF documents
 # @param instruments [Set<String>] the instruments
 # @param xml [Nokogiri::XML::Builder] the XML builder
 # @return [void]
@@ -528,7 +521,7 @@ def write_opds_instrument_entries(format, instrument, now, docs, xml)
   end
 end
 
-FOLDERS.each do |folder|
+Partitions::FOLDERS.each do |folder|
   feed_path = "#{folder}.xml"
 
   docs = []

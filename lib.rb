@@ -15,4 +15,12 @@ module Partitions
     shamisen
     ocarina
   ].freeze
+
+  # File format folders (`a4`, `letter`, `a3` or `tabloid`)
+  # @return [Array<String>]
+  FOLDERS = %w[a4 letter a3 tabloid].freeze
+
+  # Branch on each repository where the built partitions are located
+  # @return [String]
+  BRANCH = 'gh-pages'
 end

@@ -17,12 +17,6 @@ REPO_PREFIX = 'lilypond-'
 # Repositories to ignore
 # @return [Array<String>]
 EXCLUDE = %w[lilypond-template lilypond-jekyll-template].freeze
-# File format folders (`a4`, `letter`, `a3` or `tabloid`)
-# @return [Array<String>]
-FOLDERS = %w[a4 letter a3 tabloid].freeze
-# Branch on each repository where the built partitions are located
-# @return [String]
-BRANCH = 'gh-pages'
 # Folder container the repository list files
 # @return [String]
 REPOSITORY_LIST_FOLDER = File.join('site', '_includes')
@@ -81,23 +75,20 @@ def generate_tag_list(topics)
   if topics.empty?
     ''
   else
-    (topics.reject { DEFAULT_TOPICS.include?(_1) }.map do
-       if Partitions::INSTRUMENTS.include?(_1)
-         "[&#35;#{_1}]({% link #{_1}.md %})"
+    (topics.reject { DEFAULT_TOPICS.include?(_1) }.map do |topic|
+       if Partitions::INSTRUMENTS.include?(topic)
+         "[&#35;#{topic}]({% link #{topic}.md %})"
        else
-         "&#35;#{_1}"
+         "&#35;#{topic}"
        end
      end.join(', ')).prepend('*').concat("*\n\n")
   end
 end
 
-# To prevent a warning when calling the Topics API
-GITHUB_MEDIA_TYPE = 'application/vnd.github.mercy-preview+json'
-
 client = if ACCESS_TOKEN.nil? || ACCESS_TOKEN.empty?
-           Octokit::Client.new(accept: GITHUB_MEDIA_TYPE)
+           Octokit::Client.new
          else
-           Octokit::Client.new(access_token: ACCESS_TOKEN, accept: GITHUB_MEDIA_TYPE)
+           Octokit::Client.new(access_token: ACCESS_TOKEN)
          end
 client.auto_paginate = true
 
@@ -119,27 +110,21 @@ module Sawyer
 end
 
 client.repositories(Partitions::GITHUB_USER).select(&:partition_repo?).each do |repo|
-  topics_response = client.topics(repo.full_name)
-  topics = if topics_response.key?(:names) && !topics_response[:names].empty?
-             topics_response[:names]
-           else
-             []
-           end
-  topic_tag_list = generate_tag_list(topics)
+  topic_tag_list = generate_tag_list(repo.topics)
   repo_description = "### [#{repo.description.delete_suffix('.').delete_suffix('。')}](#{repo.homepage})\n\n"\
                      "#{topic_tag_list}"
 
   # Update site/_includes/all_repositories.md
   File.write(REPOSITORY_LIST_ALL_FILE, repo_description, mode: 'a')
 
-  topics.intersection(Partitions::INSTRUMENTS).each do |instrument|
+  repo.topics.intersection(Partitions::INSTRUMENTS).each do |instrument|
     # Update site/_includes/#{instrument}.md
     File.write(File.join(REPOSITORY_LIST_FOLDER, "#{instrument}.md"), repo_description, mode: 'a')
   end
 
-  FOLDERS.each do |folder|
+  Partitions::FOLDERS.each do |folder|
     begin
-      files = client.contents(repo.full_name, path: folder, query: { ref: BRANCH })
+      files = client.contents(repo.full_name, path: folder, query: { ref: Partitions::BRANCH })
     rescue Octokit::NotFound
       # Folder doesn't exist in the repository, so skip
       next
